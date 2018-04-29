@@ -1,0 +1,63 @@
+classes:
+- class: UNARY
+  shapeclass: ELEM
+  args: tensor
+  names:
+  - ABS
+  - NEG
+  - SIN
+  - COS
+  - TAN
+  - LOG
+  - EXP
+  - SQRT
+- class: BINARY
+  shapeclass: ELEM
+  args: 
+    - tensor, scalar(double)
+    - scalar(double), tensor
+    - tensor, tensor
+  names:
+  - POW
+  - ADD
+  - SUB
+  - MUL
+  - DIV
+- class: REDUCE
+  shapeclass: REDUCE
+  args:
+    - tensor, scalar(int)
+  names:
+  - RMAX
+  - RSUM
+  properties:
+  - ranklower
+- class: FULLREDUCE
+  shapeclass: REDUCE
+  args:
+    - tensor
+  names:
+  - RMAX
+  - RSUM
+  properties:
+  - rankscalar
+- class: MATMUL
+  shapeclass: MATMUL
+  args: tensor, tensor
+  names:
+  - MATMUL
+  properties:
+  - rejectscalar
+badchildren:
+  LOG:
+    - NEG
+    - SIN
+    - COS
+    - TAN
+    - SUB
+  SQRT:
+    - NEG
+    - SIN
+    - COS
+    - TAN
+    - SUB

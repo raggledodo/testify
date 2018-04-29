@@ -1,0 +1,29 @@
+sudo: required
+
+services:
+  - docker
+
+jobs:
+  include:
+    - stage: build docker image
+      script:
+        - git checkout ${TRAVIS_BRANCH}
+        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        - docker build -t $DOCKER_USERNAME/testify-test:latest .
+        - docker images
+        - docker push $DOCKER_USERNAME/testify-test:latest
+    - stage: test
+      script:
+        - docker run --rm $DOCKER_USERNAME/testify-test:latest
+
+notifications:
+  email: false
+
+branches:
+  except:
+  - legacy
+
+# safelist
+branches:
+  only:
+  - master
