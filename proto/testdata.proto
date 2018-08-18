@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+option go_package = "github.com/mingkaic/testify/proto";
+
+package testify;
+
+import "google/protobuf/any.proto";
+
+message Bytes { bytes data = 1; }
+message Doubles { repeated double data = 1; }
+message Floats { repeated float data = 1; }
+message Int32s { repeated int32 data = 1; }
+message Int64s { repeated int64 data = 1; }
+message Uint32s { repeated uint32 data = 1; }
+message Uint64s { repeated uint64 data = 1; }
+message Tree
+{
+    uint32 root = 1;
+    Graph graph = 2;
+}
+message Graph
+{
+    bytes matrix = 1;
+    uint32 nverts = 2;
+}
+
+enum DTYPE
+{
+    BYTES = 0;
+    DOUBLES = 1;
+    FLOATS = 2;
+    INT32S = 3;
+    UINT32S = 4;
+    INT64S = 5;
+    UINT64S = 6;
+    // Graph
+    GRAPH = 7;
+    NTREE = 8;
+}
+
+message Input
+{
+    string usage = 1;
+    google.protobuf.Any data = 3;
+    DTYPE dtype = 4;
+}
+
+message TestOutput
+{
+    repeated Input inputs = 1;
+    google.protobuf.Any output = 2;
+    DTYPE dtype = 3;
+}

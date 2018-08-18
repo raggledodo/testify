@@ -1,11 +1,20 @@
-# Testify
-[![Build Status](https://travis-ci.org/raggledodo/testify.svg?branch=master)](https://travis-ci.org/raggledodo/testify)
+# Overview
 
-a test utility library used conjunction with other test libraries
+Manually generating unit test inputs and expected outputs is tedious.
 
-consists of:
+Most existing automatic testing provides limited checks against the output.
 
-- fuzz-test utility (generate random vectors/values with limits and descriptions, std out generated values on failure)
-- abstract mocker (provides internal function for mapping labels and recording usage information)
-- generate random graph ast 
-- generate tensorflow script
+For math libraries, the correctness of the output is important and not easily reduced to a boolean.
+
+For these types of projects, there are often different existing projects that have already implemented certain features with some limitations.
+We can use the existing projects for regression testing against certain subsets of the target project.
+
+Given the passing regression results, the unit test stored and reused to test correctness.
+
+# Components
+
+- Generate and record expected input/output from validation program (Retro)
+
+- Testcase Database/Filesharing Server (https://github.com/raggledodo/dora)
+
+- Extract expected input/output for testing (Antero)

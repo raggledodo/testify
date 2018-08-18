@@ -1,14 +1,13 @@
 licenses(["notice"])
 
-package(
-    default_visibility = [ "//visibility:public" ]
-)
-
+# local sources
 filegroup(
     name = "srcs",
     srcs = [
         "BUILD",
-        "//testify_py:srcs",
-        "//testify_cpp:srcs",
+        "//proto:srcs",
+        "//retroc:srcs",
+        "//retrop:srcs",
     ],
+    visibility = ["//visibility:public"]
 )
