@@ -9,8 +9,8 @@ import proto.testdata_pb2 as testdata
 import proto.record_pb2 as record
 import proto.record_pb2_grpc as record_grpc
 
-from generate import GenIO
-import client
+from retrop.generate import GenIO
+import retrop.client as client
 
 SERVER_PORT = 50055
 _SERVER = None
@@ -25,6 +25,9 @@ class MockService(record_grpc.DoraServicer):
         latest_name = request.name
         latest_output = request.results
         return record.Nothing()
+
+    def RemoveTestcase(self, request, context):
+        pass
 
     def ListTestcases(self, request, context):
         pass

@@ -3,7 +3,9 @@ load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
 licenses(["notice"])
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"]
+)
 
 filegroup(
     name = "srcs",

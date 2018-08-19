@@ -1,6 +1,7 @@
 ''' Pass testcases to dora servers '''
 
 import grpc
+
 import proto.record_pb2 as record
 import proto.record_pb2_grpc as record_grpc
 

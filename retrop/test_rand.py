@@ -4,7 +4,7 @@ import os
 import sys
 import unittest
 
-import rand
+import retrop.rand as rand
 
 class RandTest(unittest.TestCase):
     def assertArrBetween(self, low, high, arr):

@@ -28,7 +28,6 @@ cc_library(
     hdrs = ["headers"],
     srcs = glob(["src/*.cpp"]),
     copts = ["-std=c++14"],
-    linkstatic = 1,
     deps = ["//proto:cc_proto"],
 )
 

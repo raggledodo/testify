@@ -7,56 +7,64 @@
 
 #ifdef CLIENT_HPP
 
-static const int client_timeout = 3;
-
 struct DoraClient
 {
-	DoraClient(std::shared_ptr<grpc::Channel> channel, size_t nretry = 0) :
-	stub_(testify::Dora::NewStub(channel)), nretry_(nretry) {}
+	DoraClient(std::shared_ptr<grpc::Channel> channel, ClientConfig configs) :
+		stub_(testify::Dora::NewStub(channel)), configs_(configs) {}
 
-	bool AddTestcase(testify::Testcase& request)
+	// return true if successful
+	bool AddTestcase(testify::Testcase& testcase)
 	{
-		testify::Nothing reply;
-		grpc::ClientContext context;
+		grpc::Status status = unsafe_addTestcase(testcase);
 
-		std::chrono::system_clock::time_point deadline =
-			std::chrono::system_clock::now() + std::chrono::seconds(client_timeout);
-		context.set_deadline(deadline);
-
-		grpc::Status status = stub_->AddTestcase(&context,
-			request, &reply);
-		bool keepsending = false == status.ok();
-
-		for (size_t i = 0; i < nretry_ && keepsending; ++i)
+		for (size_t i = 0; i < configs_.nretry && false == status.ok(); ++i)
 		{
-			// errlog << "Retry(" << i << ") Failed to send testcase: "
-			// 	<< status.error_code() << ": " << status.error_message() << "\n";
-			status = stub_->AddTestcase(&context,
-				request, &reply);
-			keepsending = false == status.ok();
+			// assert: status is not fine, so log
+			// mlogger() << status.error_code() << ":" << status.error_message();
+			status = unsafe_addTestcase(testcase);
 		}
-		// log
 
-		return keepsending;
+		bool good = status.ok();
+		if (false == good)
+		{
+			// mlogger() << status.error_code() << ":" << status.error_message();
+		}
+
+		return good;
 	}
 
 private:
+	grpc::Status unsafe_addTestcase (testify::Testcase& request)
+	{
+		testify::Nothing reply;
+
+		grpc::ClientContext context;
+		std::chrono::system_clock::time_point deadline =
+			std::chrono::system_clock::now() + std::chrono::seconds(configs_.timeout);
+		context.set_deadline(deadline);
+
+		return stub_->AddTestcase(&context, request, &reply);
+	}
+
 	std::unique_ptr<testify::Dora::Stub> stub_;
 
-	size_t nretry_;
+	ClientConfig configs_;
 };
 
 static DoraClient* client = nullptr;
 
-void RETRO_INIT (std::string host, size_t nretry)
+void RETRO_INIT (std::string host, ClientConfig configs)
 {
 	client = new DoraClient(grpc::CreateChannel(host,
-		grpc::InsecureChannelCredentials()), nretry);
+		grpc::InsecureChannelCredentials()), configs);
 }
 
 void RETRO_SHUTDOWN (void)
 {
-	delete client;
+	if (client != nullptr)
+	{
+		delete client;
+	}
 	client = nullptr;
 }
 

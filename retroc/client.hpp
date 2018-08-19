@@ -9,7 +9,16 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-void RETRO_INIT (std::string host, size_t nretry = 0);
+struct ClientConfig
+{
+    ClientConfig (void) {}
+
+    size_t nretry = 0;
+    size_t timeout = 3;
+};
+
+void RETRO_INIT (std::string host,
+    ClientConfig configs = ClientConfig());
 
 void RETRO_SHUTDOWN (void);
 

@@ -62,6 +62,12 @@ struct MockService final : public testify::Dora::Service
 		return grpc::Status::OK;
 	}
 
+	grpc::Status RemoveTestcase (grpc::ServerContext* context,
+		const testify::Testname* tcase, testify::Nothing* nothing) override
+	{
+		return grpc::Status::OK;
+	}
+
 	grpc::Status ListTestcases (grpc::ServerContext* context,
 		const testify::Nothing* nothing,
 		grpc::ServerWriter<testify::Testname>* writer) override

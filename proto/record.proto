@@ -30,7 +30,9 @@ message TestStorage
 
 service Dora
 {
-    rpc AddTestcase(Testcase) returns (Nothing) {}
     rpc ListTestcases(Nothing) returns (stream Testname) {}
     rpc GetTestcase(Testname) returns (stream TestOutput) {}
+
+    rpc AddTestcase(Testcase) returns (Nothing) {}
+    rpc RemoveTestcase(Testname) returns (Nothing) {}
 }

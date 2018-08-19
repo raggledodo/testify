@@ -22,8 +22,10 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     srcs = glob(["src/*.cpp"]),
     copts = ["-std=c++14"],
-    linkstatic = 1,
-    deps = ["//proto:cc_proto"],
+    deps = [
+        "//proto:cc_proto",
+        "@com_google_googletest//:gtest",
+    ],
 )
 
 ######### TEST #########
@@ -38,4 +40,5 @@ cc_test(
     ],
     linkstatic = 1,
     copts = ["-std=c++14"],
+    data = ["//sample:sample"],
 )

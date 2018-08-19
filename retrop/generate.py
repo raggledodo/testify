@@ -3,8 +3,8 @@
 import proto.testdata_pb2 as testdata
 import proto.record_pb2 as record
 
-import client
-import rand
+import retrop.client as client
+import retrop.rand as rand
 
 class GenIO:
     def __init__(self, name):
