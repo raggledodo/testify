@@ -5,6 +5,7 @@ option go_package = "github.com/mingkaic/testify/proto";
 package testify;
 
 import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
 
 message Bytes { bytes data = 1; }
 message Doubles { repeated double data = 1; }
@@ -38,16 +39,44 @@ enum DTYPE
     NTREE = 8;
 }
 
-message Input
+message DescribedData
 {
     string usage = 1;
     google.protobuf.Any data = 3;
     DTYPE dtype = 4;
 }
 
-message TestOutput
+message GeneratedCase
 {
-    repeated Input inputs = 1;
-    google.protobuf.Any output = 2;
-    DTYPE dtype = 3;
+    repeated DescribedData inputs = 1;
+    repeated DescribedData outputs = 2;
+}
+
+message TransferName
+{
+    string name = 1;
+}
+
+message TransferCase
+{
+    string name = 1;
+    GeneratedCase results = 2;
+}
+
+service Dora
+{
+    rpc ListTestcases(google.protobuf.Empty) returns (stream TransferName) {}
+    rpc GetTestcase(TransferName) returns (stream GeneratedCase) {}
+
+    rpc AddTestcase(TransferCase) returns (google.protobuf.Empty) {}
+    rpc RemoveTestcase(TransferName) returns (google.protobuf.Empty) {}
+}
+
+message Cases {
+    repeated GeneratedCase cases = 1;
+}
+
+message CaseStorage
+{
+    map<string,Cases> storage = 1;
 }

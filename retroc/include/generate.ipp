@@ -6,7 +6,7 @@ void GenIO::get_vec (std::string usage,
 	Range<IterType<Iterator>> range)
 {
 	::get_vec(begin, end, range);
-	testify::Input* input = output_.mutable_inputs()->Add();
+	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
 	input->set_usage(usage);
 	input->set_dtype(serialize(input->mutable_data(), begin, end));
 }
@@ -16,7 +16,7 @@ std::vector<T> GenIO::get_vec (std::string usage,
 	size_t len, Range<T> range)
 {
 	auto out = ::get_vec(len, range);
-	testify::Input* input = output_.mutable_inputs()->Add();
+	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
 	input->set_usage(usage);
 	input->set_dtype(serialize(input->mutable_data(),
 		out.begin(), out.end()));
@@ -29,7 +29,7 @@ void GenIO::get_vec (std::string usage,
 	const Iterator ibegin, const Iterator iend)
 {
 	::get_vec(obegin, oend, ibegin, iend);
-	testify::Input* input = output_.mutable_inputs()->Add();
+	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
 	input->set_usage(usage);
 	input->set_dtype(serialize(input->mutable_data(), obegin, oend));
 	}
@@ -38,7 +38,7 @@ template <typename Iterator>
 Iterator GenIO::select (std::string usage, Iterator first, Iterator last)
 {
 	auto out = ::select(first, last);
-	testify::Input* input = output_.mutable_inputs()->Add();
+	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
 	input->set_usage("select_" + usage);
 	size_t i = std::distance(first, out);
 	testify::Uint64s arr;
@@ -52,7 +52,7 @@ template <uint32_t N>
 size_t GenIO::get_minspan_tree (std::string usage, Graph<N>& out)
 {
 	::get_minspan_tree(out);
-	testify::Input* input = output_.mutable_inputs()->Add();
+	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
 	input->set_usage(usage);
 	testify::Tree tree;
 	tree.set_root(0);
@@ -66,7 +66,7 @@ template <uint32_t NVERT>
 void GenIO::get_graph (std::string usage, Graph<NVERT>& out)
 {
 	::get_graph(out);
-	testify::Input* input = output_.mutable_inputs()->Add();
+	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
 	input->set_usage(usage);
 	testify::Graph graph;
 	serialize(graph, out);
@@ -78,7 +78,7 @@ template <uint32_t NVERT>
 void GenIO::get_conn_graph (std::string usage, Graph<NVERT>& out)
 {
 	::get_conn_graph(out);
-	testify::Input* input = output_.mutable_inputs()->Add();
+	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
 	input->set_usage(usage);
 	testify::Graph graph;
 	serialize(graph, out);
@@ -87,41 +87,34 @@ void GenIO::get_conn_graph (std::string usage, Graph<NVERT>& out)
 }
 
 template <typename Iterator>
-void GenIO::set_output (Iterator begin, Iterator end)
+void GenIO::set_output (std::string usage, Iterator begin, Iterator end)
 {
-	output_.set_dtype(serialize(output_.mutable_output(),
-		begin, end));
-	if (send(testname_, output_))
-	{
-		output_.Clear();
-	}
+	testify::DescribedData* output = gcase_.mutable_outputs()->Add();
+	output->set_usage(usage);
+	output->set_dtype(serialize(output->mutable_data(), begin, end));
 }
 
 template <uint32_t N>
-void GenIO::set_outtree (size_t root, Graph<N>& graph)
+void GenIO::set_outtree (std::string usage, size_t root, Graph<N>& graph)
 {
+	testify::DescribedData* output = gcase_.mutable_outputs()->Add();
+	output->set_usage(usage);
 	testify::Tree tree;
 	tree.set_root(root);
 	serialize(*(tree.mutable_graph()), graph);
-	output_.mutable_output()->PackFrom(tree);
-	output_.set_dtype(testify::NTREE);
-	if (send(testname_, output_))
-	{
-		output_.Clear();
-	}
+	output->mutable_data()->PackFrom(tree);
+	output->set_dtype(testify::NTREE);
 }
 
 template <uint32_t NVERT>
-void GenIO::set_outgraph (Graph<NVERT>& graph)
+void GenIO::set_outgraph (std::string usage, Graph<NVERT>& graph)
 {
+	testify::DescribedData* output = gcase_.mutable_outputs()->Add();
 	testify::Graph g;
 	serialize(g, graph);
-	output_.mutable_output()->PackFrom(g);
-	output_.set_dtype(testify::GRAPH);
-	if (send(testname_, output_))
-	{
-		output_.Clear();
-	}
+	output->set_usage(usage);
+	output->mutable_data()->PackFrom(g);
+	output->set_dtype(testify::GRAPH);
 }
 
 #define SET_DATA(TYPE)\

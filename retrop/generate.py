@@ -1,7 +1,6 @@
 ''' Generate inputs and send output to client '''
 
-import proto.testdata_pb2 as testdata
-import proto.record_pb2 as record
+import proto.testify_pb2 as testify
 
 import retrop.client as client
 import retrop.rand as rand
@@ -9,20 +8,20 @@ import retrop.rand as rand
 class GenIO:
     def __init__(self, name):
         self.testname = name
-        self.output = testdata.TestOutput()
+        self.gcase = testify.GeneratedCase()
 
     def get_arr(self, usage, dtype, size, range=None):
         out = rand.get_arr(dtype, size, range)
-        input = self.output.inputs.add()
+        input = self.gcase.inputs.add()
         input.usage = usage
         if dtype is int:
-            input.dtype = testdata.INT64S
-            arr = testdata.Int64s()
+            input.dtype = testify.INT64S
+            arr = testify.Int64s()
             arr.data[:] = out
             input.data.Pack(arr)
         elif dtype is float:
-            input.dtype = testdata.DOUBLES
-            arr = testdata.Doubles()
+            input.dtype = testify.DOUBLES
+            arr = testify.Doubles()
             arr.data[:] = out
             input.data.Pack(arr)
         else:
@@ -34,10 +33,10 @@ class GenIO:
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +\
             "abcdefghijklmnopqrstuvwxyz"):
         out = rand.get_str(size, content)
-        input = self.output.inputs.add()
+        input = self.gcase.inputs.add()
         input.usage = usage
-        input.dtype = testdata.BYTES
-        arr = testdata.Bytes()
+        input.dtype = testify.BYTES
+        arr = testify.Bytes()
         arr.data = out.encode()
         input.data.Pack(arr)
         return out
@@ -45,10 +44,10 @@ class GenIO:
     def get_tree(self, usage, nverts):
         root, out = rand.get_tree(nverts)
         assert(isinstance(out, rand.Graph))
-        input = self.output.inputs.add()
+        input = self.gcase.inputs.add()
         input.usage = usage
-        input.dtype = testdata.NTREE
-        tree = testdata.Tree()
+        input.dtype = testify.NTREE
+        tree = testify.Tree()
         tree.root = root
         tree.graph.matrix = out.serialize()
         tree.graph.nverts = out.nverts
@@ -58,10 +57,10 @@ class GenIO:
     def get_graph(self, usage, nverts):
         out = rand.get_graph(nverts)
         assert(isinstance(out, rand.Graph))
-        input = self.output.inputs.add()
+        input = self.gcase.inputs.add()
         input.usage = usage
-        input.dtype = testdata.GRAPH
-        graph = testdata.Graph()
+        input.dtype = testify.GRAPH
+        graph = testify.Graph()
         graph.matrix = out.serialize()
         graph.nverts = out.nverts
         input.data.Pack(graph)
@@ -70,48 +69,51 @@ class GenIO:
     def get_cgraph(self, usage, nverts):
         out = rand.get_cgraph(nverts)
         assert(isinstance(out, rand.Graph))
-        input = self.output.inputs.add()
+        input = self.gcase.inputs.add()
         input.usage = usage
-        input.dtype = testdata.GRAPH
-        graph = testdata.Graph()
+        input.dtype = testify.GRAPH
+        graph = testify.Graph()
         graph.matrix = out.serialize()
         graph.nverts = out.nverts
         input.data.Pack(graph)
         return out
 
-    def set_arr(self, arr, dtype):
+    def set_arr(self, usage, arr, dtype):
+        output = self.gcase.outputs.add()
+        output.usage = usage
         if dtype is int:
-            self.output.dtype = testdata.INT64S
-            iarr = testdata.Int64s()
+            output.dtype = testify.INT64S
+            iarr = testify.Int64s()
             iarr.data[:] = arr
-            self.output.output.Pack(iarr)
+            output.data.Pack(iarr)
         elif dtype is float:
-            self.output.dtype = testdata.DOUBLES
-            darr = testdata.Doubles()
+            output.dtype = testify.DOUBLES
+            darr = testify.Doubles()
             darr.data[:] = arr
-            self.output.output.Pack(darr)
-        self.send()
+            output.data.Pack(darr)
 
-    def set_tree(self, root, graph):
+    def set_tree(self, usage, root, graph):
         assert(isinstance(graph, rand.Graph))
-        self.output.dtype = testdata.NTREE
-        tree = testdata.Tree()
+        output = self.gcase.outputs.add()
+        output.usage = usage
+        output.dtype = testify.NTREE
+        tree = testify.Tree()
         tree.root = root
         tree.graph.matrix = graph.serialize()
         tree.graph.nverts = graph.nverts
-        self.output.output.Pack(tree)
-        self.send()
+        output.data.Pack(tree)
 
-    def set_graph(self, graph):
+    def set_graph(self, usage, graph):
         assert(isinstance(graph, rand.Graph))
-        self.output.dtype = testdata.GRAPH
-        gr = testdata.Graph()
+        output = self.gcase.outputs.add()
+        output.usage = usage
+        output.dtype = testify.GRAPH
+        gr = testify.Graph()
         gr.matrix = graph.serialize()
         gr.nverts = graph.nverts
-        self.output.output.Pack(gr)
-        self.send()
+        output.data.Pack(gr)
 
     def send(self):
-        if len(self.output.inputs) < 1:
+        if len(self.gcase.inputs) < 1 or len(self.gcase.outputs) < 1:
             return
-        client.send(self.testname, self.output)
+        client.send(self.testname, self.gcase)

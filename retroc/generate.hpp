@@ -43,13 +43,15 @@ struct GenIO
 	void get_conn_graph (std::string usage, Graph<NVERT>& out);
 
 	template <typename Iterator>
-	void set_output (Iterator begin, Iterator end);
+	void set_output (std::string usage, Iterator begin, Iterator end);
 
 	template <uint32_t N>
-	void set_outtree (size_t root, Graph<N>& graph);
+	void set_outtree (std::string usage, size_t root, Graph<N>& graph);
 
 	template <uint32_t NVERT>
-	void set_outgraph (Graph<NVERT>& graph);
+	void set_outgraph (std::string usage, Graph<NVERT>& graph);
+
+	void send_case (void);
 
 private:
 	template <typename Iterator>
@@ -59,7 +61,7 @@ private:
 	template <uint32_t NVERT>
 	void serialize (testify::Graph& out, Graph<NVERT>& in);
 
-	testify::TestOutput output_;
+	testify::GeneratedCase gcase_;
 
 	std::string testname_;
 };

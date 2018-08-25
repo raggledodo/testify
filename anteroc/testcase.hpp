@@ -5,5 +5,5 @@
 class testament : public ::testing::Test
 {
 protected:
-    testify::TestOutput get (std::string testname);
+    testify::GeneratedCase get (std::string testname);
 };

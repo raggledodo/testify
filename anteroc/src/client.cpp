@@ -28,12 +28,12 @@ struct DoraClient
 		return good;
 	}
 
-	std::vector<testify::TestOutput> GetTestcase (size_t n, std::string tname)
+	std::vector<testify::GeneratedCase> GetTestcase (size_t n, std::string tname)
 	{
-		testify::Testname request;
+		testify::TransferName request;
 		request.set_name(tname);
 
-		std::vector<testify::TestOutput> out;
+		std::vector<testify::GeneratedCase> out;
 
 		grpc::Status status = unsafe_getTestcase(out, n, request);
 
@@ -56,7 +56,7 @@ private:
 	grpc::Status unsafe_listTestcases (
 		std::unordered_set<std::string>& out)
 	{
-		testify::Nothing request;
+		google::protobuf::Empty request;
 
 		grpc::ClientContext context;
 		std::chrono::system_clock::time_point deadline =
@@ -67,7 +67,7 @@ private:
 		auto reader = stub_->ListTestcases(&context, request);
 		if (nullptr != reader)
 		{
-			testify::Testname tname;
+			testify::TransferName tname;
 			while (reader->Read(&tname))
 			{
 				out.emplace(tname.name());
@@ -78,8 +78,8 @@ private:
 	}
 
 	grpc::Status unsafe_getTestcase(
-		std::vector<testify::TestOutput>& out,
-		size_t nlimit, testify::Testname& request)
+		std::vector<testify::GeneratedCase>& out,
+		size_t nlimit, testify::TransferName& request)
 	{
 		grpc::ClientContext context;
 		std::chrono::system_clock::time_point deadline =
@@ -90,7 +90,7 @@ private:
 		auto reader = stub_->GetTestcase(&context, request);
 		if (nullptr != reader)
 		{
-			testify::TestOutput tout;
+			testify::GeneratedCase tout;
 			for (size_t i = 0; i < nlimit && reader->Read(&tout); ++i)
 			{
 				out.push_back(tout);
@@ -124,7 +124,7 @@ void ANTERO_SHUTDOWN (void)
 	client = nullptr;
 }
 
-std::vector<testify::TestOutput> get_outputs (std::string tname)
+std::vector<testify::GeneratedCase> get_outputs (std::string tname)
 {
 	if (nullptr == client)
 	{
@@ -138,7 +138,7 @@ std::vector<testify::TestOutput> get_outputs (std::string tname)
 		found = names.find(tname) != names.end();
 	}
 
-	std::vector<testify::TestOutput> out;
+	std::vector<testify::GeneratedCase> out;
 	if (found)
 	{
 		out = client->GetTestcase(ntests, tname);

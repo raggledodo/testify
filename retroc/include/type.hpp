@@ -1,4 +1,4 @@
-#include "proto/testdata.pb.h"
+#include "proto/testify.pb.h"
 
 #ifndef TYPE_HPP
 #define TYPE_HPP

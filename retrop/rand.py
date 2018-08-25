@@ -9,20 +9,20 @@ import numpy as np
 class Graph:
     def __init__(self, nverts):
         self.nverts = nverts
-        self.data = [0] * (nverts * nverts)
+        self._data = [0] * (nverts * nverts)
 
     def connect(self, src, dest):
-        self.data[self._index(src, dest)] = 1
+        self._data[self._index(src, dest)] = 1
 
     def disconnect(self, src, dest):
-        self.data[self._index(src, dest)] = 0
+        self._data[self._index(src, dest)] = 0
 
     def get(self, src, dest):
-        return self.data[self._index(src, dest)]
+        return self._data[self._index(src, dest)]
 
     def serialize(self):
-        nbytes = int(math.ceil(len(self.data) / 8))
-        chars = [str(d) for d in self.data]
+        nbytes = int(math.ceil(len(self._data) / 8))
+        chars = [str(d) for d in self._data]
         bs = [chars[i * 8: (i+1) * 8] for i in range(nbytes)]
         bstr = [''.join(b[::-1]) for b in bs]
         ytes = [int(b, 2) for b in bstr]
@@ -46,7 +46,7 @@ class Graph:
 
     def _index(self, src, dest):
         out = src * self.nverts + dest
-        if out >= len(self.data):
+        if out >= len(self._data):
             raise "src=%d,dest=%d out of bound" % (src, dest)
         return out
 

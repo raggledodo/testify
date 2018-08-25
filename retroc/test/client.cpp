@@ -10,8 +10,8 @@
 
 #include "gtest/gtest.h"
 
-#include "proto/record.pb.h"
-#include "proto/record.grpc.pb.h"
+#include "proto/testify.pb.h"
+#include "proto/testify.grpc.pb.h"
 
 #include "retroc/generate.hpp"
 #include "retroc/rand.hpp"
@@ -47,37 +47,37 @@ std::condition_variable server_started;
 
 // server-client comms
 static std::string latest_name;
-static testify::TestOutput latest_output;
+static testify::GeneratedCase latest_case;
 std::condition_variable latest_update;
 
 
 struct MockService final : public testify::Dora::Service
 {
-	grpc::Status AddTestcase (grpc::ServerContext* context,
-		const testify::Testcase* tcase, testify::Nothing* nothing) override
+	grpc::Status ListTestcases (grpc::ServerContext*,
+		const google::protobuf::Empty*,
+		grpc::ServerWriter<testify::TransferName>*) override
+	{
+		return grpc::Status::OK;
+	}
+
+	grpc::Status GetTestcase (grpc::ServerContext*,
+		const testify::TransferName*,
+		grpc::ServerWriter<testify::GeneratedCase>*) override
+	{
+		return grpc::Status::OK;
+	}
+
+	grpc::Status AddTestcase (grpc::ServerContext*,
+		const testify::TransferCase* tcase, google::protobuf::Empty*) override
 	{
 		latest_name = tcase->name();
-		latest_output = tcase->results();
+		latest_case = tcase->results();
 		latest_update.notify_one();
 		return grpc::Status::OK;
 	}
 
-	grpc::Status RemoveTestcase (grpc::ServerContext* context,
-		const testify::Testname* tcase, testify::Nothing* nothing) override
-	{
-		return grpc::Status::OK;
-	}
-
-	grpc::Status ListTestcases (grpc::ServerContext* context,
-		const testify::Nothing* nothing,
-		grpc::ServerWriter<testify::Testname>* writer) override
-	{
-		return grpc::Status::OK;
-	}
-
-	grpc::Status GetTestcase (grpc::ServerContext* context,
-		const testify::Testname* name,
-		grpc::ServerWriter<testify::TestOutput>* nothing) override
+	grpc::Status RemoveTestcase (grpc::ServerContext*,
+		const testify::TransferName*, google::protobuf::Empty*) override
 	{
 		return grpc::Status::OK;
 	}
@@ -92,7 +92,7 @@ protected:
 	virtual void TearDown (void)
 	{
 		latest_name = "";
-		latest_output.Clear();
+		latest_case.Clear();
 	}
 };
 
@@ -154,7 +154,8 @@ TEST_F(CLIENT, CallVecs)
 	auto vec5 = io.get_vec<uint64_t>("uint64_vec", 13, Range<uint64_t>(100, 252));
 
 	std::vector<uint8_t> out = {4, 12, 2, 19};
-	io.set_output(out.begin(), out.end());
+	io.set_output("stdout", out.begin(), out.end());
+	io.send_case();
 
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
@@ -162,7 +163,7 @@ TEST_F(CLIENT, CallVecs)
 
 	EXPECT_STREQ(expect_label.c_str(), latest_name.c_str());
 
-	auto inputs = latest_output.inputs();
+	auto inputs = latest_case.inputs();
 	ASSERT_EQ(6, inputs.size());
 
 	EXPECT_STREQ("double_vec", inputs[0].usage().c_str());
@@ -207,9 +208,12 @@ TEST_F(CLIENT, CallVecs)
 	auto u64 = u64s.data();
 	EXPECT_ARREQ(vec5, u64);
 
-	ASSERT_EQ(testify::DTYPE::BYTES, latest_output.dtype());
+	auto outputs = latest_case.outputs();
+	ASSERT_EQ(1, outputs.size());
+	ASSERT_EQ(testify::DTYPE::BYTES, outputs[0].dtype());
+	EXPECT_STREQ("stdout", outputs[0].usage().c_str());
 	testify::Bytes outbytes;
-	latest_output.output().UnpackTo(&outbytes);
+	outputs[0].data().UnpackTo(&outbytes);
 	std::string outstr = outbytes.data();
 	const char* optr = outstr.c_str();
 	std::vector<uint8_t> outvec(optr, optr + outstr.size());
@@ -224,7 +228,8 @@ TEST_F(CLIENT, CallStr)
 	std::string instr = io.get_string("simplestring", 13);
 
 	std::vector<uint8_t> out = {5, 13, 3, 20};
-	io.set_output(out.begin(), out.end());
+	io.set_output("stdout", out.begin(), out.end());
+	io.send_case();
 
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
@@ -232,7 +237,7 @@ TEST_F(CLIENT, CallStr)
 
 	EXPECT_STREQ(expect_label.c_str(), latest_name.c_str());
 
-	auto inputs = latest_output.inputs();
+	auto inputs = latest_case.inputs();
 	ASSERT_EQ(1, inputs.size());
 
 	EXPECT_STREQ("simplestring", inputs[0].usage().c_str());
@@ -242,9 +247,11 @@ TEST_F(CLIENT, CallStr)
 	std::string b = bs.data();
 	EXPECT_STREQ(instr.c_str(), b.c_str());
 
-	ASSERT_EQ(testify::DTYPE::BYTES, latest_output.dtype());
+	auto outputs = latest_case.outputs();
+	ASSERT_EQ(1, outputs.size());
+	ASSERT_EQ(testify::DTYPE::BYTES, outputs[0].dtype());
 	testify::Bytes outbytes;
-	latest_output.output().UnpackTo(&outbytes);
+	outputs[0].data().UnpackTo(&outbytes);
 	std::string outstr = outbytes.data();
 	const char* optr = outstr.c_str();
 	std::vector<uint8_t> outvec(optr, optr + outstr.size());
@@ -261,7 +268,8 @@ TEST_F(CLIENT, CallChoice)
 	size_t dist = std::distance(carr.begin(), it);
 
 	std::vector<uint8_t> out = {6, 14, 4, 21};
-	io.set_output(out.begin(), out.end());
+	io.set_output("stdout", out.begin(), out.end());
+	io.send_case();
 
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
@@ -269,7 +277,7 @@ TEST_F(CLIENT, CallChoice)
 
 	EXPECT_STREQ(expect_label.c_str(), latest_name.c_str());
 
-	auto inputs = latest_output.inputs();
+	auto inputs = latest_case.inputs();
 	ASSERT_EQ(2, inputs.size());
 
 	EXPECT_STREQ("choosevec", inputs[0].usage().c_str());
@@ -287,13 +295,35 @@ TEST_F(CLIENT, CallChoice)
 	ASSERT_EQ(1, s.size());
 	EXPECT_EQ(dist, s[0]);
 
-	ASSERT_EQ(testify::DTYPE::BYTES, latest_output.dtype());
+	auto outputs = latest_case.outputs();
+	ASSERT_EQ(1, outputs.size());
+	ASSERT_EQ(testify::DTYPE::BYTES, outputs[0].dtype());
 	testify::Bytes outbytes;
-	latest_output.output().UnpackTo(&outbytes);
+	outputs[0].data().UnpackTo(&outbytes);
 	std::string outstr = outbytes.data();
 	const char* optr = outstr.c_str();
 	std::vector<uint8_t> outvec(optr, optr + outstr.size());
 	EXPECT_ARREQ(out, outvec);
+}
+
+
+template <size_t N>
+void EXPECT_GRAPHEQ (const Graph<N>& gr, const testify::Graph& pgr)
+{
+	ASSERT_EQ(N, pgr.nverts());
+	std::string encoding = pgr.matrix();
+	size_t nbytes = std::ceil(((double) N * N) / 8);
+	EXPECT_EQ(nbytes, encoding.size());
+
+	for (uint y = 0; y < N; ++y)
+	{
+		for (uint x = 0; x < N; ++x)
+		{
+			uint ibit = x + y * N;
+			bool set = 1 & (encoding[ibit / 8] >> (ibit % 8));
+			EXPECT_EQ(gr.get(y, x), set) << "bit " << ibit;
+		}
+	}
 }
 
 
@@ -305,7 +335,8 @@ TEST_F(CLIENT, CallTree)
 	Graph<13> tree;
 	size_t root = io.get_minspan_tree("mstree", tree);
 
-	io.set_outtree(root, tree);
+	io.set_outtree("stdout", root, tree);
+	io.send_case();
 
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
@@ -313,41 +344,25 @@ TEST_F(CLIENT, CallTree)
 
 	EXPECT_STREQ(expect_label.c_str(), latest_name.c_str());
 
-	auto inputs = latest_output.inputs();
+	auto inputs = latest_case.inputs();
 	ASSERT_EQ(1, inputs.size());
+
+	auto outputs = latest_case.outputs();
+	ASSERT_EQ(1, outputs.size());
 
 	EXPECT_STREQ("mstree", inputs[0].usage().c_str());
 	ASSERT_EQ(testify::DTYPE::NTREE, inputs[0].dtype());
-	ASSERT_EQ(testify::DTYPE::NTREE, latest_output.dtype());
+	ASSERT_EQ(testify::DTYPE::NTREE, outputs[0].dtype());
 
 	testify::Tree ntree;
 	inputs[0].data().UnpackTo(&ntree);
 	EXPECT_EQ(root, ntree.root());
-	ASSERT_EQ(13, ntree.graph().nverts());
+	EXPECT_GRAPHEQ<13>(tree, ntree.graph());
 
 	testify::Tree otree;
-	latest_output.output().UnpackTo(&otree);
+	outputs[0].data().UnpackTo(&otree);
 	EXPECT_EQ(root, otree.root());
-	ASSERT_EQ(13, otree.graph().nverts());
-
-	std::string encoding = ntree.graph().matrix();
-	EXPECT_EQ(22, encoding.size()); // ceil(13 * 13 / 8)
-
-	std::string outcoding = otree.graph().matrix();
-	EXPECT_EQ(22, outcoding.size()); // ceil(13 * 13 / 8)
-
-	for (uint y = 0; y < 13; ++y)
-	{
-		for (uint x = 0; x < 13; ++x)
-		{
-			uint ibit = x + y * 13;
-			bool set = 1 & (encoding[ibit / 8] >> (ibit % 8));
-			EXPECT_EQ(tree.get(y, x), set) << "bit " << ibit;
-
-			bool oset = 1 & (outcoding[ibit / 8] >> (ibit % 8));
-			EXPECT_EQ(tree.get(y, x), oset) << "bit " << ibit;
-		}
-	}
+	EXPECT_GRAPHEQ<13>(tree, otree.graph());
 }
 
 
@@ -359,7 +374,8 @@ TEST_F(CLIENT, CallGraph)
 	Graph<17> graph;
 	io.get_graph("reggraph", graph);
 
-	io.set_outgraph(graph);
+	io.set_outgraph("stdout", graph);
+	io.send_case();
 
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
@@ -367,39 +383,23 @@ TEST_F(CLIENT, CallGraph)
 
 	EXPECT_STREQ(expect_label.c_str(), latest_name.c_str());
 
-	auto inputs = latest_output.inputs();
+	auto inputs = latest_case.inputs();
 	ASSERT_EQ(1, inputs.size());
+
+	auto outputs = latest_case.outputs();
+	ASSERT_EQ(1, outputs.size());
 
 	EXPECT_STREQ("reggraph", inputs[0].usage().c_str());
 	ASSERT_EQ(testify::DTYPE::GRAPH, inputs[0].dtype());
-	ASSERT_EQ(testify::DTYPE::GRAPH, latest_output.dtype());
+	ASSERT_EQ(testify::DTYPE::GRAPH, outputs[0].dtype());
 
 	testify::Graph rgraph;
 	inputs[0].data().UnpackTo(&rgraph);
-	ASSERT_EQ(17, rgraph.nverts());
+	EXPECT_GRAPHEQ<17>(graph, rgraph);
 
 	testify::Graph ograph;
-	latest_output.output().UnpackTo(&ograph);
-	ASSERT_EQ(17, ograph.nverts());
-
-	std::string encoding = rgraph.matrix();
-	EXPECT_EQ(37, encoding.size()); // ceil(17 * 17 / 8)
-
-	std::string outcoding = ograph.matrix();
-	EXPECT_EQ(37, outcoding.size()); // ceil(17 * 17 / 8)
-
-	for (uint y = 0; y < 17; ++y)
-	{
-		for (uint x = 0; x < 17; ++x)
-		{
-			uint ibit = x + y * 17;
-			bool set = 1 & (encoding[ibit / 8] >> (ibit % 8));
-			EXPECT_EQ(graph.get(y, x), set) << "bit " << ibit;
-
-			bool oset = 1 & (outcoding[ibit / 8] >> (ibit % 8));
-			EXPECT_EQ(graph.get(y, x), oset) << "bit " << ibit;
-		}
-	}
+	outputs[0].data().UnpackTo(&ograph);
+	EXPECT_GRAPHEQ<17>(graph, ograph);
 }
 
 
@@ -411,7 +411,8 @@ TEST_F(CLIENT, CallCGraph)
 	Graph<23> graph;
 	io.get_conn_graph("congraph", graph);
 
-	io.set_outgraph(graph);
+	io.set_outgraph("stdout", graph);
+	io.send_case();
 
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
@@ -419,37 +420,21 @@ TEST_F(CLIENT, CallCGraph)
 
 	EXPECT_STREQ(expect_label.c_str(), latest_name.c_str());
 
-	auto inputs = latest_output.inputs();
+	auto inputs = latest_case.inputs();
 	ASSERT_EQ(1, inputs.size());
+
+	auto outputs = latest_case.outputs();
+	ASSERT_EQ(1, outputs.size());
 
 	EXPECT_STREQ("congraph", inputs[0].usage().c_str());
 	ASSERT_EQ(testify::DTYPE::GRAPH, inputs[0].dtype());
-	ASSERT_EQ(testify::DTYPE::GRAPH, latest_output.dtype());
+	ASSERT_EQ(testify::DTYPE::GRAPH, outputs[0].dtype());
 
 	testify::Graph cgraph;
 	inputs[0].data().UnpackTo(&cgraph);
-	ASSERT_EQ(23, cgraph.nverts());
+	EXPECT_GRAPHEQ<23>(graph, cgraph);
 
 	testify::Graph ograph;
-	latest_output.output().UnpackTo(&ograph);
-	ASSERT_EQ(23, ograph.nverts());
-
-	std::string encoding = cgraph.matrix();
-	EXPECT_EQ(67, encoding.size()); // ceil(23 * 23 / 8)
-
-	std::string outcoding = ograph.matrix();
-	EXPECT_EQ(67, outcoding.size()); // ceil(23 * 23 / 8)
-
-	for (uint y = 0; y < 23; ++y)
-	{
-		for (uint x = 0; x < 23; ++x)
-		{
-			uint ibit = x + y * 23;
-			bool set = 1 & (encoding[ibit / 8] >> (ibit % 8));
-			EXPECT_EQ(graph.get(y, x), set) << "bit " << ibit;
-
-			bool oset = 1 & (outcoding[ibit / 8] >> (ibit % 8));
-			EXPECT_EQ(graph.get(y, x), oset) << "bit " << ibit;
-		}
-	}
+	outputs[0].data().UnpackTo(&ograph);
+	EXPECT_GRAPHEQ<23>(graph, ograph);
 }

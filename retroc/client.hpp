@@ -4,7 +4,7 @@
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
 
-#include "proto/testdata.pb.h"
+#include "proto/testify.pb.h"
 
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
@@ -22,7 +22,7 @@ void RETRO_INIT (std::string host,
 
 void RETRO_SHUTDOWN (void);
 
-// send testoutput to servers, return false if output has bad format
-bool send (std::string testname, testify::TestOutput& output);
+// send GeneratedCase to servers, return false if output has bad format
+void send (std::string testname, testify::GeneratedCase& output);
 
 #endif /* CLIENT_HPP */

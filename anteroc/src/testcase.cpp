@@ -1,9 +1,9 @@
 #include "anteroc/testcase.hpp"
 
 static std::unordered_map<std::string,
-    std::list<testify::TestOutput> > outputs_;
+    std::list<testify::GeneratedCase> > outputs_;
 
-testify::TestOutput testament::get (std::string testname)
+testify::GeneratedCase testament::get (std::string testname)
 {
     auto it = outputs_.find(testname);
     if (outputs_.end() == it)
@@ -14,7 +14,7 @@ testify::TestOutput testament::get (std::string testname)
             throw std::exception();
         }
         outputs_[testname] =
-            std::list<testify::TestOutput>(upout.begin(), upout.end());
+            std::list<testify::GeneratedCase>(upout.begin(), upout.end());
     }
     auto out = outputs_[testname].front();
     outputs_[testname].pop_front();
