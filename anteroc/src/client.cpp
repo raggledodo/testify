@@ -124,7 +124,7 @@ void ANTERO_SHUTDOWN (void)
 	client = nullptr;
 }
 
-std::vector<testify::GeneratedCase> get_outputs (std::string tname)
+std::vector<testify::GeneratedCase> get_cases (std::string tname)
 {
 	if (nullptr == client)
 	{

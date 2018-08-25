@@ -19,6 +19,6 @@ void ANTERO_INIT (std::string host, size_t nrepeats,
 
 void ANTERO_SHUTDOWN (void);
 
-std::vector<testify::GeneratedCase> get_outputs (std::string tname);
+std::vector<testify::GeneratedCase> get_cases (std::string tname);
 
 #endif /* CLIENT_HPP */

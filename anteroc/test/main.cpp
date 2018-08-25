@@ -103,8 +103,8 @@ struct MockService final : public testify::Dora::Service
 			return grpc::Status(grpc::INTERNAL, "requested name not in db");
 		}
 		testify::Cases& gcase = it->second;
-		auto& outputs = gcase.outputs();
-		for (const testify::GeneratedCase& out : outputs)
+		auto& cases = gcase.cases();
+		for (const testify::GeneratedCase& out : cases)
 		{
 			writer->Write(out);
 		}
@@ -245,7 +245,7 @@ void EXPECT_GCASE_EQ (testify::GeneratedCase& expect, testify::GeneratedCase& go
 TEST_F(SAMPLE, sample1)
 {
 	std::string tname = "sample1";
-	auto expect = service.dmap_[tname].outputs()[0];
+	auto expect = service.dmap_[tname].cases()[0];
 	auto got = get(tname);
 
 	EXPECT_GCASE_EQ(expect, got);
@@ -254,7 +254,7 @@ TEST_F(SAMPLE, sample1)
 TEST_F(SAMPLE, sample2)
 {
 	std::string tname = "sample2";
-	auto expect = service.dmap_[tname].outputs()[0];
+	auto expect = service.dmap_[tname].cases()[0];
 	auto got = get(tname);
 
 	EXPECT_GCASE_EQ(expect, got);
@@ -263,7 +263,7 @@ TEST_F(SAMPLE, sample2)
 TEST_F(SAMPLE, sample3)
 {
 	std::string tname = "sample3";
-	auto expect = service.dmap_[tname].outputs()[0];
+	auto expect = service.dmap_[tname].cases()[0];
 	auto got = get(tname);
 
 	EXPECT_GCASE_EQ(expect, got);
@@ -272,7 +272,7 @@ TEST_F(SAMPLE, sample3)
 TEST_F(SAMPLE, sample4)
 {
 	std::string tname = "sample4";
-	auto expect = service.dmap_[tname].outputs()[0];
+	auto expect = service.dmap_[tname].cases()[0];
 	auto got = get(tname);
 
 	EXPECT_GCASE_EQ(expect, got);

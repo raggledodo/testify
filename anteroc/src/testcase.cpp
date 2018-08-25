@@ -1,26 +1,26 @@
 #include "anteroc/testcase.hpp"
 
 static std::unordered_map<std::string,
-    std::list<testify::GeneratedCase> > outputs_;
+    std::list<testify::GeneratedCase> > cases_;
 
 testify::GeneratedCase testament::get (std::string testname)
 {
-    auto it = outputs_.find(testname);
-    if (outputs_.end() == it)
+    auto it = cases_.find(testname);
+    if (cases_.end() == it)
     {
-        auto upout = get_outputs(testname);
+        auto upout = get_cases(testname);
         if (upout.empty())
         {
             throw std::exception();
         }
-        outputs_[testname] =
+        cases_[testname] =
             std::list<testify::GeneratedCase>(upout.begin(), upout.end());
     }
-    auto out = outputs_[testname].front();
-    outputs_[testname].pop_front();
-    if (outputs_[testname].empty())
+    auto out = cases_[testname].front();
+    cases_[testname].pop_front();
+    if (cases_[testname].empty())
     {
-        outputs_.erase(testname);
+        cases_.erase(testname);
     }
     return out;
 }
