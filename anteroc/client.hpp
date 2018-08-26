@@ -1,4 +1,4 @@
-#include <grpcpp/grpcpp.h>
+#include <grpc++/grpc++.h>
 
 #include "proto/testify.pb.h"
 #include "proto/testify.grpc.pb.h"
