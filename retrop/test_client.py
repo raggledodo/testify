@@ -3,6 +3,9 @@
 from concurrent import futures
 import unittest
 import math
+import time
+
+import numpy as np
 
 import grpc
 from google.protobuf.empty_pb2 import Empty
@@ -68,12 +71,16 @@ class ClientTest(unittest.TestCase):
     def assertGraphEqual(self, gr, pbgr):
         self.assertEqual(gr.nverts, pbgr.nverts)
         encoding = pbgr.matrix
-        nbytes = math.ceil(gr.nverts**2 / 8)
+        nbytes = int(math.ceil(gr.nverts**2 / 8.0))
         self.assertEqual(nbytes, len(encoding))
+        if isinstance(encoding[0], int):
+            enc = lambda c : 1 & c >> (i % 8)
+        else:
+            enc = lambda c : 1 & ord(c) >> (i % 8)
         for y in range(gr.nverts):
             for x in range(gr.nverts):
                 i = x + y * gr.nverts
-                s = 1 & encoding[int(i / 8)] >> (i % 8)
+                s = enc(encoding[int(i / 8)])
                 self.assertEqual(gr.get(y, x), s)
 
     def test_arr(self):
@@ -223,6 +230,7 @@ class ClientTest(unittest.TestCase):
         self.assertGraphEqual(cg, outg)
 
 if __name__ == "__main__":
+    np.random.seed(int(time.time()))
     serve()
     assert(_SERVER is not None)
     client.init("0.0.0.0:" + str(SERVER_PORT))

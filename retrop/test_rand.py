@@ -3,6 +3,9 @@
 import os
 import sys
 import unittest
+import time
+
+import numpy as np
 
 import retrop.rand as rand
 
@@ -144,6 +147,7 @@ def get_envar(key, dtype=int, default=None):
         return default
 
 if __name__ == "__main__":
+    np.random.seed(int(time.time()))
     repeat = get_envar('PYTEST_REPEAT', default=1)
     for iteration in range(repeat):
         success = unittest.main(exit=False).result.wasSuccessful()

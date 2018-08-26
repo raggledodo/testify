@@ -3,6 +3,7 @@
 import sys
 import random
 import math
+import struct
 
 import numpy as np
 
@@ -21,12 +22,13 @@ class Graph:
         return self._data[self._index(src, dest)]
 
     def serialize(self):
-        nbytes = int(math.ceil(len(self._data) / 8))
+        nbytes = int(math.ceil(len(self._data) / 8.0))
         chars = [str(d) for d in self._data]
         bs = [chars[i * 8: (i+1) * 8] for i in range(nbytes)]
         bstr = [''.join(b[::-1]) for b in bs]
-        ytes = [int(b, 2) for b in bstr]
-        return bytes(ytes)
+        ints = [int(b, 2) for b in bstr]
+        chars = [struct.pack('B', b) for b in ints]
+        return b''.join(chars)
 
     def breadth_traverse(self, root, cb):
         visited = [False] * self.nverts
