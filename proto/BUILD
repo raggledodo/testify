@@ -22,7 +22,10 @@ filegroup(
 proto_library(
     name = "proto",
     srcs = ["protos"],
-    deps = ["@com_google_protobuf//:any_proto"],
+    deps = [
+        "@com_google_protobuf//:any_proto",
+        "@com_google_protobuf//:empty_proto",
+    ],
 )
 
 cc_proto_library(

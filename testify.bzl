@@ -42,7 +42,6 @@ cc_library(
 
 get_gtest = repository_rule(implementation = _impl)
 
-
 def dependencies():
     # protobuf dependency
     if "org_pubref_rules_protobuf" not in native.existing_rules():
