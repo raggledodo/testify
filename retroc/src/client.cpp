@@ -1,11 +1,14 @@
-#include <grpcpp/grpcpp.h>
+#include <grpc/grpc.h>
 
 #include "retroc/client.hpp"
 
 #include "proto/testify.pb.h"
 #include "proto/testify.grpc.pb.h"
 
-#ifdef CLIENT_HPP
+#ifdef RETRO_CLIENT_HPP
+
+namespace retro
+{
 
 struct DoraClient
 {
@@ -57,19 +60,26 @@ private:
 
 static DoraClient* client = nullptr;
 
-void RETRO_INIT (std::string host, ClientConfig configs)
+// cache testname and attempt to send case to server
+void cache (std::string testname, testify::GeneratedCase& gcase)
+{
+	// todo: implement
+}
+
+void INIT (std::string host, ClientConfig configs)
 {
 	client = new DoraClient(grpc::CreateChannel(host,
 		grpc::InsecureChannelCredentials()), configs);
 }
 
-void RETRO_SHUTDOWN (void)
+void SHUTDOWN (void)
 {
 	if (client != nullptr)
 	{
 		delete client;
 	}
 	client = nullptr;
+	google::protobuf::ShutdownProtobufLibrary();
 }
 
 void send (std::string testname, testify::GeneratedCase& gcase)
@@ -82,9 +92,10 @@ void send (std::string testname, testify::GeneratedCase& gcase)
 	if (false == client->AddTestcase(testname, gcase))
 	{
 		// log
-		// cache output locally
-		// add to reattempt job queue
+		cache(testname, gcase);
 	}
+}
+
 }
 
 #endif

@@ -39,17 +39,16 @@ enum DTYPE
     NTREE = 8;
 }
 
-message DescribedData
+message CaseData
 {
-    string usage = 1;
-    google.protobuf.Any data = 3;
-    DTYPE dtype = 4;
+    google.protobuf.Any data = 1;
+    DTYPE dtype = 2;
 }
 
 message GeneratedCase
 {
-    repeated DescribedData inputs = 1;
-    repeated DescribedData outputs = 2;
+    map<string,CaseData> inputs = 1;
+    map<string,CaseData> outputs = 2;
 }
 
 message TransferName
@@ -67,6 +66,7 @@ service Dora
 {
     rpc ListTestcases(google.protobuf.Empty) returns (stream TransferName) {}
     rpc GetTestcase(TransferName) returns (stream GeneratedCase) {}
+    rpc GetOneTestcase(TransferName) returns (GeneratedCase) {}
 
     rpc AddTestcase(TransferCase) returns (google.protobuf.Empty) {}
     rpc RemoveTestcase(TransferName) returns (google.protobuf.Empty) {}

@@ -51,6 +51,11 @@ struct GenIO
 	template <uint32_t NVERT>
 	void set_outgraph (std::string usage, Graph<NVERT>& graph);
 
+	bool can_send (void)
+	{
+		return gcase_.inputs().size() > 0;
+	}
+
 	void send_case (void);
 
 private:

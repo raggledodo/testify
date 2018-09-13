@@ -1,4 +1,5 @@
 #include <grpc/grpc.h>
+
 #include <grpcpp/channel.h>
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
@@ -6,8 +7,11 @@
 
 #include "proto/testify.pb.h"
 
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#ifndef RETRO_CLIENT_HPP
+#define RETRO_CLIENT_HPP
+
+namespace retro
+{
 
 struct ClientConfig
 {
@@ -17,12 +21,14 @@ struct ClientConfig
     size_t timeout = 3;
 };
 
-void RETRO_INIT (std::string host,
+void INIT (std::string host,
     ClientConfig configs = ClientConfig());
 
-void RETRO_SHUTDOWN (void);
+void SHUTDOWN (void);
 
 // send GeneratedCase to servers, return false if output has bad format
 void send (std::string testname, testify::GeneratedCase& output);
 
-#endif /* CLIENT_HPP */
+}
+
+#endif /* RETRO_CLIENT_HPP */

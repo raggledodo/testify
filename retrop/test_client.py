@@ -100,22 +100,22 @@ class ClientTest(unittest.TestCase):
         outputs = latest_case.outputs
         self.assertEqual(1, len(outputs))
 
-        self.assertEqual("int", inputs[0].usage)
-        self.assertEqual(testify.INT64S, inputs[0].dtype)
+        self.assertTrue("int" in inputs)
+        self.assertEqual(testify.INT64S, inputs["int"].dtype)
         i64s = testify.Int64s()
-        inputs[0].data.Unpack(i64s)
+        inputs["int"].data.Unpack(i64s)
         self.assertArrEqual(iarr, i64s.data)
 
-        self.assertEqual("double", inputs[1].usage)
-        self.assertEqual(testify.DOUBLES, inputs[1].dtype)
+        self.assertTrue("double" in inputs)
+        self.assertEqual(testify.DOUBLES, inputs["double"].dtype)
         ds = testify.Doubles()
-        inputs[1].data.Unpack(ds)
+        inputs["double"].data.Unpack(ds)
         self.assertArrEqual(darr, ds.data)
 
-        self.assertEqual("stdout", outputs[0].usage)
-        self.assertEqual(testify.INT64S, outputs[0].dtype)
+        self.assertTrue("stdout" in outputs)
+        self.assertEqual(testify.INT64S, outputs["stdout"].dtype)
         outr = testify.Int64s()
-        outputs[0].data.Unpack(outr)
+        outputs["stdout"].data.Unpack(outr)
         self.assertArrEqual(out, outr.data)
 
     def test_str(self):
@@ -134,16 +134,16 @@ class ClientTest(unittest.TestCase):
         outputs = latest_case.outputs
         self.assertEqual(1, len(outputs))
 
-        self.assertEqual("strusage", inputs[0].usage)
-        self.assertEqual(testify.BYTES, inputs[0].dtype)
+        self.assertTrue("strusage" in inputs)
+        self.assertEqual(testify.BYTES, inputs["strusage"].dtype)
         bs = testify.Bytes()
-        inputs[0].data.Unpack(bs)
+        inputs["strusage"].data.Unpack(bs)
         self.assertEqual(s, bs.data.decode())
 
-        self.assertEqual("stdout", outputs[0].usage)
-        self.assertEqual(testify.INT64S, outputs[0].dtype)
+        self.assertTrue("stdout" in outputs)
+        self.assertEqual(testify.INT64S, outputs["stdout"].dtype)
         outr = testify.Int64s()
-        outputs[0].data.Unpack(outr)
+        outputs["stdout"].data.Unpack(outr)
         self.assertArrEqual(out, outr.data)
 
     def test_tree(self):
@@ -161,17 +161,17 @@ class ClientTest(unittest.TestCase):
         outputs = latest_case.outputs
         self.assertEqual(1, len(outputs))
 
-        self.assertEqual("treeusage", inputs[0].usage)
-        self.assertEqual(testify.NTREE, inputs[0].dtype)
+        self.assertTrue("treeusage" in inputs)
+        self.assertEqual(testify.NTREE, inputs["treeusage"].dtype)
         ts = testify.Tree()
-        inputs[0].data.Unpack(ts)
+        inputs["treeusage"].data.Unpack(ts)
         self.assertEqual(root, ts.root)
         self.assertGraphEqual(tr, ts.graph)
 
-        self.assertEqual("stdout", outputs[0].usage)
-        self.assertEqual(testify.NTREE, outputs[0].dtype)
+        self.assertTrue("stdout" in outputs)
+        self.assertEqual(testify.NTREE, outputs["stdout"].dtype)
         outt = testify.Tree()
-        outputs[0].data.Unpack(outt)
+        outputs["stdout"].data.Unpack(outt)
         self.assertEqual(root, outt.root)
         self.assertGraphEqual(tr, outt.graph)
 
@@ -190,16 +190,16 @@ class ClientTest(unittest.TestCase):
         outputs = latest_case.outputs
         self.assertEqual(1, len(outputs))
 
-        self.assertEqual("graphusage", inputs[0].usage)
-        self.assertEqual(testify.GRAPH, inputs[0].dtype)
+        self.assertTrue("graphusage" in inputs)
+        self.assertEqual(testify.GRAPH, inputs["graphusage"].dtype)
         gs = testify.Graph()
-        inputs[0].data.Unpack(gs)
+        inputs["graphusage"].data.Unpack(gs)
         self.assertGraphEqual(gr, gs)
 
-        self.assertEqual("stdout", outputs[0].usage)
-        self.assertEqual(testify.GRAPH, outputs[0].dtype)
+        self.assertTrue("stdout" in outputs)
+        self.assertEqual(testify.GRAPH, outputs["stdout"].dtype)
         outg = testify.Graph()
-        outputs[0].data.Unpack(outg)
+        outputs["stdout"].data.Unpack(outg)
         self.assertGraphEqual(gr, outg)
 
     def test_cgraph(self):
@@ -217,16 +217,16 @@ class ClientTest(unittest.TestCase):
         outputs = latest_case.outputs
         self.assertEqual(1, len(outputs))
 
-        self.assertEqual("cgraphusage", inputs[0].usage)
-        self.assertEqual(testify.GRAPH, inputs[0].dtype)
+        self.assertTrue("cgraphusage" in inputs)
+        self.assertEqual(testify.GRAPH, inputs["cgraphusage"].dtype)
         gs = testify.Graph()
-        inputs[0].data.Unpack(gs)
+        inputs["cgraphusage"].data.Unpack(gs)
         self.assertGraphEqual(cg, gs)
 
-        self.assertEqual("stdout", outputs[0].usage)
-        self.assertEqual(testify.GRAPH, outputs[0].dtype)
+        self.assertTrue("stdout" in outputs)
+        self.assertEqual(testify.GRAPH, outputs["stdout"].dtype)
         outg = testify.Graph()
-        outputs[0].data.Unpack(outg)
+        outputs["stdout"].data.Unpack(outg)
         self.assertGraphEqual(cg, outg)
 
 if __name__ == "__main__":

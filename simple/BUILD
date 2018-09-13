@@ -8,34 +8,34 @@ filegroup(
     name = "srcs",
     srcs = glob([
         "*.hpp",
-        "include/*.hpp",
-        "include/*.ipp",
         "src/*.cpp",
-    ]) + ["BUILD"],
+    ]) + [
+        "BUILD",
+        "headers",
+    ],
 )
 
 ######### LIBRARY #########
 
 cc_library(
-    name = "retroc",
+    name = "simple",
     hdrs = glob(["*.hpp"]),
-    srcs = glob([
-        "src/*.cpp",
-        "include/*.hpp",
-        "include/*.ipp",
-    ]),
+    srcs = glob(["src/*.cpp"]),
     copts = ["-std=c++14"],
-    deps = ["//proto:cc_proto"],
+    deps = [
+        "//anteroc:anteroc",
+        "//retroc:retroc",
+    ],
 )
 
 ######### TEST #########
 
 cc_test(
-    name = "test_client",
+    name = "test_gen",
     size = "small",
-    srcs = ["test/client.cpp"],
+    srcs = ["test/genmode.cpp"],
     deps = [
-        "//retroc:retroc",
+        "//simple:simple",
         "@com_google_googletest//:gtest",
     ],
     linkstatic = 1,
@@ -43,11 +43,11 @@ cc_test(
 )
 
 cc_test(
-    name = "test_rand",
+    name = "test_read",
     size = "small",
-    srcs = ["test/rand.cpp"],
+    srcs = ["test/readmode.cpp"],
     deps = [
-        "//retroc:retroc",
+        "//simple:simple",
         "@com_google_googletest//:gtest",
     ],
     linkstatic = 1,

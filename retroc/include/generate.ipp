@@ -6,9 +6,10 @@ void GenIO::get_vec (std::string usage,
 	Range<IterType<Iterator>> range)
 {
 	::get_vec(begin, end, range);
-	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
-	input->set_usage(usage);
-	input->set_dtype(serialize(input->mutable_data(), begin, end));
+	testify::CaseData input;
+	input.set_dtype(serialize(input.mutable_data(), begin, end));
+	gcase_.mutable_inputs()->insert({usage, input});
+
 }
 
 template <typename T>
@@ -16,10 +17,10 @@ std::vector<T> GenIO::get_vec (std::string usage,
 	size_t len, Range<T> range)
 {
 	auto out = ::get_vec(len, range);
-	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
-	input->set_usage(usage);
-	input->set_dtype(serialize(input->mutable_data(),
+	testify::CaseData input;
+	input.set_dtype(serialize(input.mutable_data(),
 		out.begin(), out.end()));
+	gcase_.mutable_inputs()->insert({usage, input});
 	return out;
 }
 
@@ -29,22 +30,22 @@ void GenIO::get_vec (std::string usage,
 	const Iterator ibegin, const Iterator iend)
 {
 	::get_vec(obegin, oend, ibegin, iend);
-	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
-	input->set_usage(usage);
-	input->set_dtype(serialize(input->mutable_data(), obegin, oend));
-	}
+	testify::CaseData input;
+	input.set_dtype(serialize(input.mutable_data(), obegin, oend));
+	gcase_.mutable_inputs()->insert({usage, input});
+}
 
 template <typename Iterator>
 Iterator GenIO::select (std::string usage, Iterator first, Iterator last)
 {
 	auto out = ::select(first, last);
-	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
-	input->set_usage("select_" + usage);
+	testify::CaseData input;
 	size_t i = std::distance(first, out);
 	testify::Uint64s arr;
 	arr.add_data(i);
-	input->mutable_data()->PackFrom(arr);
-	input->set_dtype(testify::UINT64S);
+	input.mutable_data()->PackFrom(arr);
+	input.set_dtype(testify::UINT64S);
+	gcase_.mutable_inputs()->insert({usage, input});
 	return out;
 }
 
@@ -52,13 +53,13 @@ template <uint32_t N>
 size_t GenIO::get_minspan_tree (std::string usage, Graph<N>& out)
 {
 	::get_minspan_tree(out);
-	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
-	input->set_usage(usage);
+	testify::CaseData input;
 	testify::Tree tree;
 	tree.set_root(0);
 	serialize(*(tree.mutable_graph()), out);
-	input->mutable_data()->PackFrom(tree);
-	input->set_dtype(testify::NTREE);
+	input.mutable_data()->PackFrom(tree);
+	input.set_dtype(testify::NTREE);
+	gcase_.mutable_inputs()->insert({usage, input});
 	return 0;
 }
 
@@ -66,55 +67,55 @@ template <uint32_t NVERT>
 void GenIO::get_graph (std::string usage, Graph<NVERT>& out)
 {
 	::get_graph(out);
-	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
-	input->set_usage(usage);
+	testify::CaseData input;
 	testify::Graph graph;
 	serialize(graph, out);
-	input->mutable_data()->PackFrom(graph);
-	input->set_dtype(testify::GRAPH);
+	input.mutable_data()->PackFrom(graph);
+	input.set_dtype(testify::GRAPH);
+	gcase_.mutable_inputs()->insert({usage, input});
 }
 
 template <uint32_t NVERT>
 void GenIO::get_conn_graph (std::string usage, Graph<NVERT>& out)
 {
 	::get_conn_graph(out);
-	testify::DescribedData* input = gcase_.mutable_inputs()->Add();
-	input->set_usage(usage);
+	testify::CaseData input;
 	testify::Graph graph;
 	serialize(graph, out);
-	input->mutable_data()->PackFrom(graph);
-	input->set_dtype(testify::GRAPH);
+	input.mutable_data()->PackFrom(graph);
+	input.set_dtype(testify::GRAPH);
+	gcase_.mutable_inputs()->insert({usage, input});
 }
 
 template <typename Iterator>
 void GenIO::set_output (std::string usage, Iterator begin, Iterator end)
 {
-	testify::DescribedData* output = gcase_.mutable_outputs()->Add();
-	output->set_usage(usage);
-	output->set_dtype(serialize(output->mutable_data(), begin, end));
+	testify::CaseData output;
+	output.set_dtype(serialize(output.mutable_data(), begin, end));
+	gcase_.mutable_outputs()->insert({usage, output});
 }
 
 template <uint32_t N>
 void GenIO::set_outtree (std::string usage, size_t root, Graph<N>& graph)
 {
-	testify::DescribedData* output = gcase_.mutable_outputs()->Add();
-	output->set_usage(usage);
+	testify::CaseData output;
 	testify::Tree tree;
 	tree.set_root(root);
 	serialize(*(tree.mutable_graph()), graph);
-	output->mutable_data()->PackFrom(tree);
-	output->set_dtype(testify::NTREE);
+	output.mutable_data()->PackFrom(tree);
+	output.set_dtype(testify::NTREE);
+	gcase_.mutable_outputs()->insert({usage, output});
 }
 
 template <uint32_t NVERT>
 void GenIO::set_outgraph (std::string usage, Graph<NVERT>& graph)
 {
-	testify::DescribedData* output = gcase_.mutable_outputs()->Add();
+	testify::CaseData output;
 	testify::Graph g;
 	serialize(g, graph);
-	output->set_usage(usage);
-	output->mutable_data()->PackFrom(g);
-	output->set_dtype(testify::GRAPH);
+	output.mutable_data()->PackFrom(g);
+	output.set_dtype(testify::GRAPH);
+	gcase_.mutable_outputs()->insert({usage, output});
 }
 
 #define SET_DATA(TYPE)\
@@ -174,7 +175,7 @@ testify::DTYPE GenIO::serialize (google::protobuf::Any* out,
 		}
 		break;
 		default:
-			throw std::exception();
+			throw std::runtime_error("serializing bad type");
 	}
 	return type;
 }

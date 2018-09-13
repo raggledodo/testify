@@ -2,7 +2,7 @@
 
 #include "anteroc/client.hpp"
 
-class testament : public ::testing::Test
+class Testament : public ::testing::Test
 {
 protected:
     testify::GeneratedCase get (std::string testname);

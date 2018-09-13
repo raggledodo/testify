@@ -3,15 +3,15 @@
 static std::unordered_map<std::string,
     std::list<testify::GeneratedCase> > cases_;
 
-testify::GeneratedCase testament::get (std::string testname)
+testify::GeneratedCase Testament::get (std::string testname)
 {
     auto it = cases_.find(testname);
     if (cases_.end() == it)
     {
-        auto upout = get_cases(testname);
+        auto upout = antero::get_cases(testname);
         if (upout.empty())
         {
-            throw std::exception();
+            throw std::runtime_error("testcase returned empty: " + testname);
         }
         cases_[testname] =
             std::list<testify::GeneratedCase>(upout.begin(), upout.end());

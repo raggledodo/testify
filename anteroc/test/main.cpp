@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include <grpc/grpc.h>
+
 #include <grpcpp/server.h>
 #include <grpcpp/server_builder.h>
 #include <grpcpp/server_context.h>
@@ -153,12 +154,12 @@ int main (int argc, char** argv)
 	{
 		nreps = atoi(nrepeats);
 	}
-	ANTERO_INIT(server_addr, nreps); // no retries
+	antero::INIT(server_addr, nreps);
 
 	::testing::InitGoogleTest(&argc, argv);
 	int ret = RUN_ALL_TESTS();
 
-	ANTERO_SHUTDOWN();
+	antero::SHUTDOWN();
 
 	std::chrono::system_clock::time_point deadline =
 		std::chrono::system_clock::now() + std::chrono::seconds(10);
@@ -169,7 +170,7 @@ int main (int argc, char** argv)
 	return ret;
 }
 
-class SAMPLE : public testament {};
+class SAMPLE : public Testament {};
 
 void EXPECT_ANY_EQ (testify::DTYPE type,
 	const google::protobuf::Any& expect, const google::protobuf::Any& got)
@@ -214,10 +215,8 @@ void EXPECT_ANY_EQ (testify::DTYPE type,
 	}
 }
 
-void EXPECT_DESCRIBED_EQ (testify::DescribedData& expect, testify::DescribedData& got)
+void EXPECT_DESCRIBED_EQ (testify::CaseData& expect, testify::CaseData& got)
 {
-	EXPECT_STREQ(expect.usage().c_str(), got.usage().c_str());
-
 	testify::DTYPE dtype = expect.dtype();
 	ASSERT_EQ(dtype, got.dtype());
 	EXPECT_ANY_EQ(dtype, expect.data(), got.data());
@@ -228,17 +227,17 @@ void EXPECT_GCASE_EQ (testify::GeneratedCase& expect, testify::GeneratedCase& go
 	auto einputs = expect.inputs();
 	auto ginputs = got.inputs();
 	ASSERT_EQ(einputs.size(), ginputs.size());
-	for (size_t i = 0, n = einputs.size(); i < n; ++i)
+	for (auto epair : einputs)
 	{
-		EXPECT_DESCRIBED_EQ(einputs[i], ginputs[i]);
+		EXPECT_DESCRIBED_EQ(epair.second, ginputs[epair.first]);
 	}
 
 	auto eoutputs = expect.outputs();
 	auto goutputs = got.outputs();
 	ASSERT_EQ(eoutputs.size(), goutputs.size());
-	for (size_t i = 0, n = eoutputs.size(); i < n; ++i)
+	for (auto epair : eoutputs)
 	{
-		EXPECT_DESCRIBED_EQ(eoutputs[i], goutputs[i]);
+		EXPECT_DESCRIBED_EQ(epair.second, goutputs[epair.first]);
 	}
 }
 
@@ -280,5 +279,5 @@ TEST_F(SAMPLE, sample4)
 
 TEST_F(SAMPLE, sample5)
 {
-	EXPECT_THROW(get("sample5"), std::exception);
+	EXPECT_THROW(get("sample5"), std::runtime_error);
 }

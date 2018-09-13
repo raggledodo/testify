@@ -4,7 +4,7 @@ GTEST_FLAGS := --action_env="GTEST_SHUFFLE=1" --action_env="GTEST_BREAK_ON_FAILU
 
 TEST := bazel test $(COMMON_BZL_FLAGS)
 
-all: test_retroc test_retrop test_anteroc
+all: test_retroc test_retrop test_anteroc test_jack
 
 test_retroc: test_retroc_client test_retroc_rand
 
@@ -24,3 +24,7 @@ test_retrop_rand:
 
 test_anteroc:
 	$(TEST) $(GTEST_FLAGS) --action_env="GTEST_REPEAT=50" //anteroc:test
+
+test_jack:
+	$(TEST) $(GTEST_FLAGS) //simple:test_gen
+	$(TEST) $(GTEST_FLAGS) //simple:test_read

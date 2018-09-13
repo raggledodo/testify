@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include <grpc/grpc.h>
+
 #include <grpcpp/server.h>
 #include <grpcpp/server_builder.h>
 #include <grpcpp/server_context.h>
@@ -125,12 +126,12 @@ int main (int argc, char** argv)
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
 	server_started.wait_for(lck,std::chrono::seconds(1));
-	RETRO_INIT(server_addr); // no retries
+	retro::INIT(server_addr); // no retries
 
 	::testing::InitGoogleTest(&argc, argv);
 	int ret = RUN_ALL_TESTS();
 
-	RETRO_SHUTDOWN();
+	retro::SHUTDOWN();
 
 	std::chrono::system_clock::time_point deadline =
 		std::chrono::system_clock::now() + std::chrono::seconds(10);
@@ -166,54 +167,61 @@ TEST_F(CLIENT, CallVecs)
 	auto inputs = latest_case.inputs();
 	ASSERT_EQ(6, inputs.size());
 
-	EXPECT_STREQ("double_vec", inputs[0].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::DOUBLES, inputs[0].dtype());
+	auto doubit = inputs.find("double_vec");
+	EXPECT_TRUE(doubit != inputs.end()) << "double_vec not found in generated case";
+	ASSERT_EQ(testify::DTYPE::DOUBLES, doubit->second.dtype());
 	testify::Doubles ds;
-	inputs[0].data().UnpackTo(&ds);
+	doubit->second.data().UnpackTo(&ds);
 	auto d = ds.data();
 	EXPECT_ARREQ(vec0, d);
 
-	EXPECT_STREQ("float_vec", inputs[1].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::FLOATS, inputs[1].dtype());
+	auto floatit = inputs.find("float_vec");
+	EXPECT_TRUE(floatit != inputs.end()) << "float_vec not found in generated case";
+	ASSERT_EQ(testify::DTYPE::FLOATS, floatit->second.dtype());
 	testify::Floats fs;
-	inputs[1].data().UnpackTo(&fs);
+	floatit->second.data().UnpackTo(&fs);
 	auto f = fs.data();
 	EXPECT_ARREQ(vec1, f);
 
-	EXPECT_STREQ("int32_vec", inputs[2].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::INT32S, inputs[2].dtype());
+	auto int32it = inputs.find("int32_vec");
+	EXPECT_TRUE(int32it != inputs.end()) << "int32_vec not found in generated case";
+	ASSERT_EQ(testify::DTYPE::INT32S, int32it->second.dtype());
 	testify::Int32s i32s;
-	inputs[2].data().UnpackTo(&i32s);
+	int32it->second.data().UnpackTo(&i32s);
 	auto i32 = i32s.data();
 	EXPECT_ARREQ(vec2, i32);
 
-	EXPECT_STREQ("uint32_vec", inputs[3].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::UINT32S, inputs[3].dtype());
+	auto uint32it = inputs.find("uint32_vec");
+	EXPECT_TRUE(uint32it != inputs.end()) << "uint32_vec not found in generated case";
+	ASSERT_EQ(testify::DTYPE::UINT32S, uint32it->second.dtype());
 	testify::Uint32s u32s;
-	inputs[3].data().UnpackTo(&u32s);
+	uint32it->second.data().UnpackTo(&u32s);
 	auto u32 = u32s.data();
 	EXPECT_ARREQ(vec3, u32);
 
-	EXPECT_STREQ("int64_vec", inputs[4].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::INT64S, inputs[4].dtype());
+	auto int64it = inputs.find("int64_vec");
+	EXPECT_TRUE(int64it != inputs.end()) << "int64_vec not found in generated case";
+	ASSERT_EQ(testify::DTYPE::INT64S, int64it->second.dtype());
 	testify::Int64s i64s;
-	inputs[4].data().UnpackTo(&i64s);
+	int64it->second.data().UnpackTo(&i64s);
 	auto i64 = i64s.data();
 	EXPECT_ARREQ(vec4, i64);
 
-	EXPECT_STREQ("uint64_vec", inputs[5].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::UINT64S, inputs[5].dtype());
+	auto uint64it = inputs.find("uint64_vec");
+	EXPECT_TRUE(uint64it != inputs.end()) << "uint64_vec not found in generated case";
+	ASSERT_EQ(testify::DTYPE::UINT64S, uint64it->second.dtype());
 	testify::Uint64s u64s;
-	inputs[5].data().UnpackTo(&u64s);
+	uint64it->second.data().UnpackTo(&u64s);
 	auto u64 = u64s.data();
 	EXPECT_ARREQ(vec5, u64);
 
 	auto outputs = latest_case.outputs();
 	ASSERT_EQ(1, outputs.size());
-	ASSERT_EQ(testify::DTYPE::BYTES, outputs[0].dtype());
-	EXPECT_STREQ("stdout", outputs[0].usage().c_str());
+	auto outit = outputs.find("stdout");
+	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
+	ASSERT_EQ(testify::DTYPE::BYTES, outit->second.dtype());
 	testify::Bytes outbytes;
-	outputs[0].data().UnpackTo(&outbytes);
+	outit->second.data().UnpackTo(&outbytes);
 	std::string outstr = outbytes.data();
 	const char* optr = outstr.c_str();
 	std::vector<uint8_t> outvec(optr, optr + outstr.size());
@@ -240,18 +248,21 @@ TEST_F(CLIENT, CallStr)
 	auto inputs = latest_case.inputs();
 	ASSERT_EQ(1, inputs.size());
 
-	EXPECT_STREQ("simplestring", inputs[0].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::BYTES, inputs[0].dtype());
+	auto ssit = inputs.find("simplestring");
+	EXPECT_TRUE(ssit != inputs.end()) << "simplestring not found in generated case";
+	ASSERT_EQ(testify::DTYPE::BYTES, ssit->second.dtype());
 	testify::Bytes bs;
-	inputs[0].data().UnpackTo(&bs);
+	ssit->second.data().UnpackTo(&bs);
 	std::string b = bs.data();
 	EXPECT_STREQ(instr.c_str(), b.c_str());
 
 	auto outputs = latest_case.outputs();
 	ASSERT_EQ(1, outputs.size());
-	ASSERT_EQ(testify::DTYPE::BYTES, outputs[0].dtype());
+	auto outit = outputs.find("stdout");
+	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
+	ASSERT_EQ(testify::DTYPE::BYTES, outit->second.dtype());
 	testify::Bytes outbytes;
-	outputs[0].data().UnpackTo(&outbytes);
+	outit->second.data().UnpackTo(&outbytes);
 	std::string outstr = outbytes.data();
 	const char* optr = outstr.c_str();
 	std::vector<uint8_t> outvec(optr, optr + outstr.size());
@@ -280,26 +291,30 @@ TEST_F(CLIENT, CallChoice)
 	auto inputs = latest_case.inputs();
 	ASSERT_EQ(2, inputs.size());
 
-	EXPECT_STREQ("choosevec", inputs[0].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::UINT64S, inputs[0].dtype());
+	auto chooseit = inputs.find("choosevec");
+	EXPECT_TRUE(chooseit != inputs.end()) << "choosevec not found in generated case";
+	ASSERT_EQ(testify::DTYPE::UINT64S, chooseit->second.dtype());
 	testify::Uint64s u64s;
-	inputs[0].data().UnpackTo(&u64s);
+	chooseit->second.data().UnpackTo(&u64s);
 	auto u64 = u64s.data();
 	EXPECT_ARREQ(carr, u64);
 
-	EXPECT_STREQ("select_carr", inputs[1].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::UINT64S, inputs[1].dtype());
+	auto selectit = inputs.find("carr");
+	EXPECT_TRUE(selectit != inputs.end()) << "carr not found in generated case";
+	ASSERT_EQ(testify::DTYPE::UINT64S, selectit->second.dtype());
 	testify::Uint64s ss;
-	inputs[1].data().UnpackTo(&ss);
+	selectit->second.data().UnpackTo(&ss);
 	auto s = ss.data();
 	ASSERT_EQ(1, s.size());
 	EXPECT_EQ(dist, s[0]);
 
 	auto outputs = latest_case.outputs();
 	ASSERT_EQ(1, outputs.size());
-	ASSERT_EQ(testify::DTYPE::BYTES, outputs[0].dtype());
+	auto outit = outputs.find("stdout");
+	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
+	ASSERT_EQ(testify::DTYPE::BYTES, outit->second.dtype());
 	testify::Bytes outbytes;
-	outputs[0].data().UnpackTo(&outbytes);
+	outit->second.data().UnpackTo(&outbytes);
 	std::string outstr = outbytes.data();
 	const char* optr = outstr.c_str();
 	std::vector<uint8_t> outvec(optr, optr + outstr.size());
@@ -350,17 +365,21 @@ TEST_F(CLIENT, CallTree)
 	auto outputs = latest_case.outputs();
 	ASSERT_EQ(1, outputs.size());
 
-	EXPECT_STREQ("mstree", inputs[0].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::NTREE, inputs[0].dtype());
-	ASSERT_EQ(testify::DTYPE::NTREE, outputs[0].dtype());
+	auto treeit = inputs.find("mstree");
+	EXPECT_TRUE(treeit != inputs.end()) << "mstree not found in generated case";
+	auto outit = outputs.find("stdout");
+	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
+
+	ASSERT_EQ(testify::DTYPE::NTREE, treeit->second.dtype());
+	ASSERT_EQ(testify::DTYPE::NTREE, outit->second.dtype());
 
 	testify::Tree ntree;
-	inputs[0].data().UnpackTo(&ntree);
+	treeit->second.data().UnpackTo(&ntree);
 	EXPECT_EQ(root, ntree.root());
 	EXPECT_GRAPHEQ<13>(tree, ntree.graph());
 
 	testify::Tree otree;
-	outputs[0].data().UnpackTo(&otree);
+	outit->second.data().UnpackTo(&otree);
 	EXPECT_EQ(root, otree.root());
 	EXPECT_GRAPHEQ<13>(tree, otree.graph());
 }
@@ -389,16 +408,20 @@ TEST_F(CLIENT, CallGraph)
 	auto outputs = latest_case.outputs();
 	ASSERT_EQ(1, outputs.size());
 
-	EXPECT_STREQ("reggraph", inputs[0].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::GRAPH, inputs[0].dtype());
-	ASSERT_EQ(testify::DTYPE::GRAPH, outputs[0].dtype());
+	auto regit = inputs.find("reggraph");
+	EXPECT_TRUE(regit != inputs.end()) << "reggraph not found in generated case";
+	auto outit = outputs.find("stdout");
+	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
+
+	ASSERT_EQ(testify::DTYPE::GRAPH, regit->second.dtype());
+	ASSERT_EQ(testify::DTYPE::GRAPH, outit->second.dtype());
 
 	testify::Graph rgraph;
-	inputs[0].data().UnpackTo(&rgraph);
+	regit->second.data().UnpackTo(&rgraph);
 	EXPECT_GRAPHEQ<17>(graph, rgraph);
 
 	testify::Graph ograph;
-	outputs[0].data().UnpackTo(&ograph);
+	outit->second.data().UnpackTo(&ograph);
 	EXPECT_GRAPHEQ<17>(graph, ograph);
 }
 
@@ -426,15 +449,19 @@ TEST_F(CLIENT, CallCGraph)
 	auto outputs = latest_case.outputs();
 	ASSERT_EQ(1, outputs.size());
 
-	EXPECT_STREQ("congraph", inputs[0].usage().c_str());
-	ASSERT_EQ(testify::DTYPE::GRAPH, inputs[0].dtype());
-	ASSERT_EQ(testify::DTYPE::GRAPH, outputs[0].dtype());
+	auto cgit = inputs.find("congraph");
+	EXPECT_TRUE(cgit != inputs.end()) << "congraph not found in generated case";
+	auto outit = outputs.find("stdout");
+	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
+
+	ASSERT_EQ(testify::DTYPE::GRAPH, cgit->second.dtype());
+	ASSERT_EQ(testify::DTYPE::GRAPH, outit->second.dtype());
 
 	testify::Graph cgraph;
-	inputs[0].data().UnpackTo(&cgraph);
+	cgit->second.data().UnpackTo(&cgraph);
 	EXPECT_GRAPHEQ<23>(graph, cgraph);
 
 	testify::Graph ograph;
-	outputs[0].data().UnpackTo(&ograph);
+	outit->second.data().UnpackTo(&ograph);
 	EXPECT_GRAPHEQ<23>(graph, ograph);
 }

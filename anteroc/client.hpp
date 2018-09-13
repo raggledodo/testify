@@ -3,8 +3,11 @@
 #include "proto/testify.pb.h"
 #include "proto/testify.grpc.pb.h"
 
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#ifndef ANTERO_CLIENT_HPP
+#define ANTERO_CLIENT_HPP
+
+namespace antero
+{
 
 struct ClientConfig
 {
@@ -14,11 +17,13 @@ struct ClientConfig
 	size_t timeout = 3;
 };
 
-void ANTERO_INIT (std::string host, size_t nrepeats,
+void INIT (std::string host, size_t nrepeats,
     ClientConfig configs = ClientConfig());
 
-void ANTERO_SHUTDOWN (void);
+void SHUTDOWN (void);
 
 std::vector<testify::GeneratedCase> get_cases (std::string tname);
 
-#endif /* CLIENT_HPP */
+}
+
+#endif /* ANTERO_CLIENT_HPP */

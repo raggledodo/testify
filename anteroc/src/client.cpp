@@ -1,6 +1,9 @@
 #include "anteroc/client.hpp"
 
-#ifdef CLIENT_HPP
+#ifdef ANTERO_CLIENT_HPP
+
+namespace antero
+{
 
 struct DoraClient
 {
@@ -108,20 +111,21 @@ private:
 static DoraClient* client = nullptr;
 static size_t ntests = 50;
 
-void ANTERO_INIT (std::string host, size_t nrepeats, ClientConfig configs)
+void INIT (std::string host, size_t nrepeats, ClientConfig configs)
 {
 	ntests = nrepeats;
 	client = new DoraClient(grpc::CreateChannel(host,
 		grpc::InsecureChannelCredentials()), configs);
 }
 
-void ANTERO_SHUTDOWN (void)
+void SHUTDOWN (void)
 {
 	if (client != nullptr)
 	{
 		delete client;
 	}
 	client = nullptr;
+	google::protobuf::ShutdownProtobufLibrary();
 }
 
 std::vector<testify::GeneratedCase> get_cases (std::string tname)
@@ -144,6 +148,8 @@ std::vector<testify::GeneratedCase> get_cases (std::string tname)
 		out = client->GetTestcase(ntests, tname);
 	}
 	return out;
+}
+
 }
 
 #endif
