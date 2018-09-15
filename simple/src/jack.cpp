@@ -7,106 +7,106 @@ bool TestModel::GENERATE_MODE = false;
 
 static std::vector<double> unpack_double (const google::protobuf::Any& data, testify::DTYPE type)
 {
-    std::vector<double> out;
-    switch (type)
-    {
-        case testify::DOUBLES:
-        {
-            testify::Doubles arr;
-            data.UnpackTo(&arr);
-            auto temp = arr.data();
-            out = std::vector<double>(temp.begin(), temp.end());
-        }
-        break;
-        case testify::FLOATS:
-        {
-            testify::Floats arr;
-            data.UnpackTo(&arr);
-            auto temp = arr.data();
-            out = std::vector<double>(temp.begin(), temp.end());
-        }
-        default:
-            throw std::runtime_error("incorrect (non-decimal) type");
-    }
-    return out;
+	std::vector<double> out;
+	switch (type)
+	{
+		case testify::DOUBLES:
+		{
+			testify::Doubles arr;
+			data.UnpackTo(&arr);
+			auto temp = arr.data();
+			out = std::vector<double>(temp.begin(), temp.end());
+		}
+		break;
+		case testify::FLOATS:
+		{
+			testify::Floats arr;
+			data.UnpackTo(&arr);
+			auto temp = arr.data();
+			out = std::vector<double>(temp.begin(), temp.end());
+		}
+		default:
+			throw std::runtime_error("incorrect (non-decimal) type");
+	}
+	return out;
 }
 
-static std::vector<int32_t> unpack_int32_t (const google::protobuf::Any& data, testify::DTYPE type)
+static std::vector<int32_t> unpack_int (const google::protobuf::Any& data, testify::DTYPE type)
 {
-    std::vector<int32_t> out;
-    switch (type)
-    {
-        case testify::INT64S:
-        {
-            testify::Int64s arr;
-            data.UnpackTo(&arr);
-            auto temp = arr.data();
-            out = std::vector<int32_t>(temp.begin(), temp.end());
-        }
-        break;
-        case testify::UINT64S:
-        {
-            testify::Uint64s arr;
-            data.UnpackTo(&arr);
-            auto temp = arr.data();
-            out = std::vector<int32_t>(temp.begin(), temp.end());
-        }
-        break;
-        case testify::INT32S:
-        {
-            testify::Int32s arr;
-            data.UnpackTo(&arr);
-            auto temp = arr.data();
-            out = std::vector<int32_t>(temp.begin(), temp.end());
-        }
-        break;
-        case testify::UINT32S:
-        {
-            testify::Uint32s arr;
-            data.UnpackTo(&arr);
-            auto temp = arr.data();
-            out = std::vector<int32_t>(temp.begin(), temp.end());
-        }
-        break;
-        case testify::BYTES:
-        {
-            testify::Bytes arr;
-            data.UnpackTo(&arr);
-            auto temp = arr.data();
-            out = std::vector<int32_t>(temp.begin(), temp.end());
-        }
-        break;
-        default:
-            throw std::runtime_error("incorrect (non-integer) type");
-    }
-    return out;
+	std::vector<int32_t> out;
+	switch (type)
+	{
+		case testify::INT64S:
+		{
+			testify::Int64s arr;
+			data.UnpackTo(&arr);
+			auto temp = arr.data();
+			out = std::vector<int32_t>(temp.begin(), temp.end());
+		}
+		break;
+		case testify::UINT64S:
+		{
+			testify::Uint64s arr;
+			data.UnpackTo(&arr);
+			auto temp = arr.data();
+			out = std::vector<int32_t>(temp.begin(), temp.end());
+		}
+		break;
+		case testify::INT32S:
+		{
+			testify::Int32s arr;
+			data.UnpackTo(&arr);
+			auto temp = arr.data();
+			out = std::vector<int32_t>(temp.begin(), temp.end());
+		}
+		break;
+		case testify::UINT32S:
+		{
+			testify::Uint32s arr;
+			data.UnpackTo(&arr);
+			auto temp = arr.data();
+			out = std::vector<int32_t>(temp.begin(), temp.end());
+		}
+		break;
+		case testify::BYTES:
+		{
+			testify::Bytes arr;
+			data.UnpackTo(&arr);
+			auto temp = arr.data();
+			out = std::vector<int32_t>(temp.begin(), temp.end());
+		}
+		break;
+		default:
+			throw std::runtime_error("incorrect (non-integer) type");
+	}
+	return out;
 }
 
 static std::string unpack_string (const google::protobuf::Any& data, testify::DTYPE type)
 {
-    std::string out;
-    switch (type)
-    {
-        case testify::BYTES:
-        {
-            testify::Bytes arr;
-            data.UnpackTo(&arr);
-            auto temp = arr.data();
-            out = std::string(temp.begin(), temp.end());
-        }
-        break;
-        default:
-            throw std::runtime_error(
-                "incorrect (non-string) type");
-    }
-    return out;
+	std::string out;
+	switch (type)
+	{
+		case testify::BYTES:
+		{
+			testify::Bytes arr;
+			data.UnpackTo(&arr);
+			auto temp = arr.data();
+			out = std::string(temp.begin(), temp.end());
+		}
+		break;
+		default:
+			throw std::runtime_error(
+				"incorrect (non-string) type");
+	}
+	return out;
 }
 
 struct ModelledSession : public iSession
 {
 	ModelledSession (testify::GeneratedCase gcase) : gcase_(gcase) {}
 
-    virtual ~ModelledSession (void) {}
+	virtual ~ModelledSession (void) {}
 
 	std::vector<double> expect_double (std::string usage) override
 	{
@@ -127,7 +127,7 @@ struct ModelledSession : public iSession
 		{
 			throw std::runtime_error(usage + " not found");
 		}
-		return unpack_int32_t(it->second.data(), it->second.dtype());
+		return unpack_int(it->second.data(), it->second.dtype());
 	}
 
 	std::string expect_string (std::string usage) override
@@ -148,7 +148,7 @@ protected:
 struct GenSession final : public ModelledSession
 {
 	GenSession (testify::GeneratedCase gcase, std::string testname) :
-        ModelledSession(gcase), io_(testname) {}
+		ModelledSession(gcase), io_(testname) {}
 
 	~GenSession (void)
 	{
@@ -214,49 +214,63 @@ struct OutSession final : public ModelledSession
 	std::vector<double> get_double (std::string usage, size_t len,
 		Range<double> range = Range<double>()) override
 	{
-		auto& inputs = gcase_.inputs();
-		auto it = inputs.find(usage);
-		if (inputs.end() == it)
+		try
 		{
-			throw std::runtime_error(usage + " not found");
-		}
-		std::vector<double> out = unpack_double(it->second.data(), it->second.dtype());
-		if (out.size() != len)
-		{
-			throw std::runtime_error("extracted int32_t vec invalid length");
-		}
-		for (double e : out)
-		{
-			if (e < range.min_ || e > range.max_)
+			auto& inputs = gcase_.inputs();
+			auto it = inputs.find(usage);
+			if (inputs.end() == it)
 			{
-				throw std::runtime_error("extracted double value out of range");
+				throw std::runtime_error(usage + " not found");
 			}
+			std::vector<double> out = unpack_double(it->second.data(), it->second.dtype());
+			if (out.size() != len)
+			{
+				throw std::runtime_error("extracted int32_t vec invalid length");
+			}
+			for (double e : out)
+			{
+				if (e < range.min_ || e > range.max_)
+				{
+					throw std::runtime_error("extracted double value out of range");
+				}
+			}
+			return out;
 		}
-		return out;
+		catch (...)
+		{
+			return get_vec<double>(len, range);
+		}
 	}
 
 	std::vector<int32_t> get_int (std::string usage, size_t len,
 		Range<int32_t> range = Range<int32_t>()) override
 	{
-		auto& inputs = gcase_.inputs();
-		auto it = inputs.find(usage);
-		if (inputs.end() == it)
+		try
 		{
-			throw std::runtime_error(usage + " not found");
-		}
-		std::vector<int32_t> out = unpack_int32_t(it->second.data(), it->second.dtype());
-		if (out.size() != len)
-		{
-			throw std::runtime_error("extracted int32_t vec invalid length");
-		}
-		for (int32_t e : out)
-		{
-			if (e < range.min_ || e > range.max_)
+			auto& inputs = gcase_.inputs();
+			auto it = inputs.find(usage);
+			if (inputs.end() == it)
 			{
-				throw std::runtime_error("extracted int32_t value out of range");
+				throw std::runtime_error(usage + " not found");
 			}
+			std::vector<int32_t> out = unpack_int(it->second.data(), it->second.dtype());
+			if (out.size() != len)
+			{
+				throw std::runtime_error("extracted int32_t vec invalid length");
+			}
+			for (int32_t e : out)
+			{
+				if (e < range.min_ || e > range.max_)
+				{
+					throw std::runtime_error("extracted int32_t value out of range");
+				}
+			}
+			return out;
 		}
-		return out;
+		catch (...)
+		{
+			return get_vec<int32_t>(len, range);
+		}
 	}
 
 	int32_t get_scalar (std::string usage, Range<int32_t> range = Range<int32_t>()) override
@@ -266,18 +280,25 @@ struct OutSession final : public ModelledSession
 
 	std::string get_string (std::string usage, size_t len) override
 	{
-		auto& inputs = gcase_.inputs();
-		auto it = inputs.find(usage);
-		if (inputs.end() == it)
+		try
 		{
-			throw std::runtime_error(usage + " not found");
+			auto& inputs = gcase_.inputs();
+			auto it = inputs.find(usage);
+			if (inputs.end() == it)
+			{
+				throw std::runtime_error(usage + " not found");
+			}
+			std::string out = unpack_string(it->second.data(), it->second.dtype());
+			if (out.size() != len)
+			{
+				throw std::runtime_error("extracted int32_t vec invalid length");
+			}
+			return out;
 		}
-		std::string out = unpack_string(it->second.data(), it->second.dtype());
-		if (out.size() != len)
+		catch (...)
 		{
-			throw std::runtime_error("extracted int32_t vec invalid length");
+			return ::get_string(len);
 		}
-		return out;
 	}
 
 
@@ -292,21 +313,21 @@ struct OutSession final : public ModelledSession
 
 SESSION TestModel::get_session (std::string testname)
 {
-    testify::GeneratedCase model;
-    try
-    {
-        model = get(testname);
-        if (false == GENERATE_MODE)
-        {
-            return SESSION(new OutSession(model));
-        }
-    }
-    catch (...) // fall back on generation mode
-    {
-        // log
-    }
-    TestModel::GENERATE_MODE = true;
-    return SESSION(new GenSession(model, testname));
+	testify::GeneratedCase model;
+	try
+	{
+		model = get(testname);
+		if (false == GENERATE_MODE)
+		{
+			return SESSION(new OutSession(model));
+		}
+	}
+	catch (...) // fall back on generation mode
+	{
+		// log
+	}
+	TestModel::GENERATE_MODE = true;
+	return SESSION(new GenSession(model, testname));
 }
 
 namespace simple

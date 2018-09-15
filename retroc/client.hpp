@@ -15,14 +15,14 @@ namespace retro
 
 struct ClientConfig
 {
-    ClientConfig (void) {}
+	ClientConfig (void) {}
 
-    size_t nretry = 0;
-    size_t timeout = 3;
+	size_t nretry = 0;
+	size_t timeout = 3;
 };
 
 void INIT (std::string host,
-    ClientConfig configs = ClientConfig());
+	ClientConfig configs = ClientConfig());
 
 void SHUTDOWN (void);
 

@@ -18,7 +18,7 @@ struct ClientConfig
 };
 
 void INIT (std::string host, size_t nrepeats,
-    ClientConfig configs = ClientConfig());
+	ClientConfig configs = ClientConfig());
 
 void SHUTDOWN (void);
 

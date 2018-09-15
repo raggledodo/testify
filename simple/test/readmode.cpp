@@ -79,11 +79,11 @@ struct MockService final : public testify::Dora::Service
 		if (0 == key.compare("JACK::Send"))
 		{
 			testify::GeneratedCase out;
-            auto& inputs = *(out.mutable_inputs());
-            testify::CaseData case_dbs;
-            testify::CaseData case_its;
-            testify::CaseData case_scalar;
-            testify::CaseData case_str;
+			auto& inputs = *(out.mutable_inputs());
+			testify::CaseData case_dbs;
+			testify::CaseData case_its;
+			testify::CaseData case_scalar;
+			testify::CaseData case_str;
 			testify::Doubles input_dd;
 			google::protobuf::RepeatedField<double> input_pb_dubs(dbs.begin(), dbs.end());
 			input_dd.mutable_data()->Swap(&input_pb_dubs);
@@ -140,7 +140,7 @@ struct MockService final : public testify::Dora::Service
 	grpc::Status AddTestcase (grpc::ServerContext*,
 		const testify::TransferCase* tcase, google::protobuf::Empty*) override
 	{
-        assert(false);
+		assert(false);
 		return grpc::Status::OK;
 	}
 
@@ -225,9 +225,9 @@ TEST_F(JACK, Send)
 	EXPECT_ARREQ(lngs, exis);
 	EXPECT_STREQ(strs.c_str(), exstr.c_str());
 
-    static std::vector<double> entry_exdbs = {0.12, 33.2, 12};
-    static std::vector<int32_t> entry_exlng = {12, 332, 112};
-    static std::string entry_exstr = "dfq123p412m@sq#";
+	static std::vector<double> entry_exdbs = {0.12, 33.2, 12};
+	static std::vector<int32_t> entry_exlng = {12, 332, 112};
+	static std::string entry_exstr = "dfq123p412m@sq#";
 
 	sess->store_double("entry_double", entry_exdbs);
 	sess->store_int("entry_int32_t", entry_exlng);
