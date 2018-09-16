@@ -1,3 +1,5 @@
+#include <future>
+
 #include "anteroc/client.hpp"
 
 #ifdef ANTERO_CLIENT_HPP
@@ -5,14 +7,29 @@
 namespace antero
 {
 
+static const size_t health_interval = 30;
+
 struct DoraClient
 {
 	DoraClient (std::shared_ptr<grpc::Channel> channel, ClientConfig configs) :
-		stub_(testify::Dora::NewStub(channel)), configs_(configs) {}
+		stub_(testify::Dora::NewStub(channel)), configs_(configs)
+	{
+		reachable_ = true;
+	}
+
+	~DoraClient (void)
+	{
+		reachable_ = false;
+	}
 
 	// return true if successful
 	bool ListTestcases (std::unordered_set<std::string>& out)
 	{
+		if (false == reachable_)
+		{
+			return false;
+		}
+
 		grpc::Status status = unsafe_listTestcases(out);
 
 		for (size_t i = 0; i < configs_.nretry && false == status.ok(); ++i)
@@ -33,10 +50,14 @@ struct DoraClient
 
 	std::vector<testify::GeneratedCase> GetTestcase (size_t n, std::string tname)
 	{
+		std::vector<testify::GeneratedCase> out;
+		if (false == reachable_)
+		{
+			return out;
+		}
+
 		testify::TransferName request;
 		request.set_name(tname);
-
-		std::vector<testify::GeneratedCase> out;
 
 		grpc::Status status = unsafe_getTestcase(out, n, request);
 
@@ -77,6 +98,12 @@ private:
 			}
 			status = reader->Finish();
 		}
+		if (status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED)
+		{
+			set_health_job();
+			return grpc::Status(grpc::StatusCode::DEADLINE_EXCEEDED,
+				"Deadline exceeded or Client cancelled, abandoning.");
+		}
 		return status;
 	}
 
@@ -100,8 +127,38 @@ private:
 			}
 			status = reader->Finish();
 		}
+		if (status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED)
+		{
+			set_health_job();
+			return grpc::Status(grpc::StatusCode::DEADLINE_EXCEEDED,
+				"Deadline exceeded or Client cancelled, abandoning.");
+		}
 		return status;
 	}
+
+	void set_health_job (void)
+	{
+		reachable_ = false;
+		std::async(std::launch::async,
+		[this]()
+		{
+			while (false == reachable_)
+			{
+				std::this_thread::sleep_for(std::chrono::seconds(health_interval));
+				// check health
+				grpc::ClientContext context;
+				std::chrono::system_clock::time_point deadline =
+					std::chrono::system_clock::now() + std::chrono::seconds(configs_.timeout);
+				context.set_deadline(deadline);
+				google::protobuf::Empty empty;
+				testify::HealthCheckResponse resp;
+				auto status = stub_->CheckHealth(&context, empty, &resp);
+				reachable_ = status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED;
+			}
+		});
+	}
+
+	std::atomic<bool> reachable_;
 
 	std::unique_ptr<testify::Dora::Stub> stub_;
 

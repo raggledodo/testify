@@ -108,37 +108,40 @@ struct ModelledSession : public iSession
 
 	virtual ~ModelledSession (void) {}
 
-	std::vector<double> expect_double (std::string usage) override
+	optional<std::vector<double>> expect_double (std::string usage) override
 	{
+		optional<std::vector<double>> out;
 		auto& outputs = gcase_.outputs();
 		auto it = outputs.find(usage);
-		if (outputs.end() == it)
+		if (outputs.end() != it)
 		{
-			throw std::runtime_error(usage + " not found");
+			out = unpack_double(it->second.data(), it->second.dtype());
 		}
-		return unpack_double(it->second.data(), it->second.dtype());
+		return out;
 	}
 
-	std::vector<int32_t> expect_int (std::string usage) override
+	optional<std::vector<int32_t>> expect_int (std::string usage) override
 	{
+		optional<std::vector<int32_t>> out;
 		auto& outputs = gcase_.outputs();
 		auto it = outputs.find(usage);
-		if (outputs.end() == it)
+		if (outputs.end() != it)
 		{
-			throw std::runtime_error(usage + " not found");
+			out = unpack_int(it->second.data(), it->second.dtype());
 		}
-		return unpack_int(it->second.data(), it->second.dtype());
+		return out;
 	}
 
-	std::string expect_string (std::string usage) override
+	optional<std::string> expect_string (std::string usage) override
 	{
+		optional<std::string> out;
 		auto& outputs = gcase_.outputs();
 		auto it = outputs.find(usage);
-		if (outputs.end() == it)
+		if (outputs.end() != it)
 		{
-			throw std::runtime_error(usage + " not found");
+			out = unpack_string(it->second.data(), it->second.dtype());
 		}
-		return unpack_string(it->second.data(), it->second.dtype());
+		return out;
 	}
 
 protected:

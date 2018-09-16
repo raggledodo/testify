@@ -43,9 +43,33 @@ cc_test(
 )
 
 cc_test(
+    name = "test_genoffline",
+    size = "small",
+    srcs = ["test/genoffline.cpp"],
+    deps = [
+        "//simple:simple",
+        "@com_google_googletest//:gtest",
+    ],
+    linkstatic = 1,
+    copts = ["-std=c++14"],
+)
+
+cc_test(
     name = "test_read",
     size = "small",
     srcs = ["test/readmode.cpp"],
+    deps = [
+        "//simple:simple",
+        "@com_google_googletest//:gtest",
+    ],
+    linkstatic = 1,
+    copts = ["-std=c++14"],
+)
+
+cc_test(
+    name = "test_readoffline",
+    size = "small",
+    srcs = ["test/readoffline.cpp"],
     deps = [
         "//simple:simple",
         "@com_google_googletest//:gtest",

@@ -46,8 +46,6 @@ static std::unique_ptr<grpc::Server> server;
 std::condition_variable server_started;
 
 // server-client comms
-static std::string unknown_register;
-
 // generated inputs
 static std::vector<double> dbs;
 static std::vector<int32_t> its;
@@ -255,15 +253,23 @@ TEST_F(JACK, Send)
 	EXPECT_LT(srange.min_, scalar);
 	EXPECT_GT(srange.max_, scalar);
 
-	std::vector<double> exds = sess->expect_double("expect_dbs");
-	std::vector<int32_t> exis = sess->expect_int("expect_its");
-	std::string exstr = sess->expect_string("expect_str");
+	optional<std::vector<double>> exds = sess->expect_double("expect_dbs");
+	optional<std::vector<int32_t>> exis = sess->expect_int("expect_its");
+	optional<std::string> exstr = sess->expect_string("expect_str");
 
-	EXPECT_ARREQ(dubs, exds);
-	EXPECT_ARREQ(lngs, exis);
-	EXPECT_STREQ(strs.c_str(), exstr.c_str());
+	ASSERT_TRUE((bool) exds);
+	ASSERT_TRUE((bool) exis);
+	ASSERT_TRUE((bool) exstr);
 
-	sess->store_double("entry_double", exdbs);
-	sess->store_int("entry_int32_t", exlng);
-	sess->store_string("entry_string", exstr);
+	std::vector<double> exdsvec = *exds;
+	std::vector<int32_t> exisvec = *exis;
+	std::string exstrvec = *exstr;
+
+	EXPECT_ARREQ(dubs, exdsvec);
+	EXPECT_ARREQ(lngs, exisvec);
+	EXPECT_STREQ(strs.c_str(), exstrvec.c_str());
+
+	sess->store_double("entry_double", exdsvec);
+	sess->store_int("entry_int32_t", exisvec);
+	sess->store_string("entry_string", exstrvec);
 }

@@ -62,6 +62,15 @@ message TransferCase
     GeneratedCase results = 2;
 }
 
+message HealthCheckResponse {
+    enum Status {
+        UNKNOWN = 0;
+        SERVING = 1;
+        NOT_SERVING = 2;
+    }
+    Status status = 1;
+}
+
 service Dora
 {
     rpc ListTestcases(google.protobuf.Empty) returns (stream TransferName) {}
@@ -70,6 +79,8 @@ service Dora
 
     rpc AddTestcase(TransferCase) returns (google.protobuf.Empty) {}
     rpc RemoveTestcase(TransferName) returns (google.protobuf.Empty) {}
+
+    rpc CheckHealth(google.protobuf.Empty) returns (HealthCheckResponse) {}
 }
 
 message Cases {

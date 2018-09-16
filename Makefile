@@ -28,3 +28,5 @@ test_anteroc:
 test_jack:
 	$(TEST) $(GTEST_FLAGS) @com_github_mingkaic_testify//simple:test_gen
 	$(TEST) $(GTEST_FLAGS) @com_github_mingkaic_testify//simple:test_read
+	$(TEST) $(GTEST_FLAGS) @com_github_mingkaic_testify//simple:test_genoffline
+	$(TEST) $(GTEST_FLAGS) @com_github_mingkaic_testify//simple:test_readoffline

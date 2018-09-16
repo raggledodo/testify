@@ -1,7 +1,11 @@
+#include <experimental/optional>
+
 #include "gtest/gtest.h"
 
 #include "retroc/generate.hpp"
 #include "anteroc/testcase.hpp"
+
+using namespace std::experimental;
 
 struct iSession
 {
@@ -16,11 +20,11 @@ struct iSession
 	virtual std::string get_string (std::string usage, size_t len) = 0;
 
 
-	virtual std::vector<double> expect_double (std::string usage) = 0;
+	virtual optional<std::vector<double>> expect_double (std::string usage) = 0;
 
-	virtual std::vector<int32_t> expect_int (std::string usage) = 0;
+	virtual optional<std::vector<int32_t>> expect_int (std::string usage) = 0;
 
-	virtual std::string expect_string (std::string usage) = 0;
+	virtual optional<std::string> expect_string (std::string usage) = 0;
 
 
 	virtual void store_double (std::string usage, std::vector<double> value) = 0;
