@@ -8,193 +8,162 @@ namespace antero
 {
 
 static const size_t health_interval = 30;
+static ClientConfig cfg;
+static std::atomic<bool> reachable(true);
+static std::unique_ptr<testify::Dora::Stub> stub = nullptr;
 
-struct DoraClient
+static std::atomic<bool> keep_check(true);
+static std::thread* health_job = nullptr;
+static std::condition_variable stop_check;
+
+grpc::Status unsafe_listTestcases (
+	std::unordered_set<std::string>& out)
 {
-	DoraClient (std::shared_ptr<grpc::Channel> channel, ClientConfig configs) :
-		stub_(testify::Dora::NewStub(channel)), configs_(configs)
+	google::protobuf::Empty request;
+
+	grpc::ClientContext context;
+	std::chrono::system_clock::time_point deadline =
+		std::chrono::system_clock::now() + std::chrono::seconds(cfg.timeout);
+	context.set_deadline(deadline);
+
+	grpc::Status status(grpc::UNKNOWN, "obtained streaming reader is null");
+	auto reader = stub->ListTestcases(&context, request);
+	if (nullptr != reader)
 	{
-		reachable_ = true;
+		testify::TransferName tname;
+		while (reader->Read(&tname))
+		{
+			out.emplace(tname.name());
+		}
+		status = reader->Finish();
+	}
+	return status;
+}
+
+grpc::Status unsafe_getTestcase(
+	std::vector<testify::GeneratedCase>& out,
+	size_t nlimit, testify::TransferName& request)
+{
+	grpc::ClientContext context;
+	std::chrono::system_clock::time_point deadline =
+		std::chrono::system_clock::now() + std::chrono::seconds(cfg.timeout);
+	context.set_deadline(deadline);
+
+	grpc::Status status(grpc::UNKNOWN, "obtained streaming reader is null");
+	auto reader = stub->GetTestcase(&context, request);
+	if (nullptr != reader)
+	{
+		testify::GeneratedCase tout;
+		for (size_t i = 0; i < nlimit && reader->Read(&tout); ++i)
+		{
+			out.push_back(tout);
+		}
+		status = reader->Finish();
+	}
+	return status;
+}
+
+// return true if successful
+bool ListTestcases (std::unordered_set<std::string>& out)
+{
+	if (false == reachable)
+	{
+		return false;
 	}
 
-	~DoraClient (void)
+	grpc::Status status = unsafe_listTestcases(out);
+
+	for (size_t i = 0; i < cfg.nretry && false == status.ok(); ++i)
 	{
-		reachable_ = false;
+		// assert: status is not fine, so log
+		// mlogger() << status.error_code() << ":" << status.error_message();
+		status = unsafe_listTestcases(out);
 	}
 
-	// return true if successful
-	bool ListTestcases (std::unordered_set<std::string>& out)
+	bool good = status.ok();
+	if (false == good)
 	{
-		if (false == reachable_)
-		{
-			return false;
-		}
-
-		grpc::Status status = unsafe_listTestcases(out);
-
-		for (size_t i = 0; i < configs_.nretry && false == status.ok(); ++i)
-		{
-			// assert: status is not fine, so log
-			// mlogger() << status.error_code() << ":" << status.error_message();
-			status = unsafe_listTestcases(out);
-		}
-
-		bool good = status.ok();
-		if (false == good)
-		{
-			// mlogger() << status.error_code() << ":" << status.error_message();
-		}
-
-		return good;
+		// mlogger() << status.error_code() << ":" << status.error_message();
 	}
 
-	std::vector<testify::GeneratedCase> GetTestcase (size_t n, std::string tname)
+	return good;
+}
+
+std::vector<testify::GeneratedCase> GetTestcase (size_t n, std::string tname)
+{
+	std::vector<testify::GeneratedCase> out;
+	if (false == reachable)
 	{
-		std::vector<testify::GeneratedCase> out;
-		if (false == reachable_)
-		{
-			return out;
-		}
-
-		testify::TransferName request;
-		request.set_name(tname);
-
-		grpc::Status status = unsafe_getTestcase(out, n, request);
-
-		for (size_t i = 0; i < configs_.nretry && false == status.ok(); ++i)
-		{
-			// assert: status is not fine, so log
-			// mlogger() << status.error_code() << ":" << status.error_message();
-			status = unsafe_getTestcase(out, n, request);
-		}
-
-		if (false == status.ok())
-		{
-			// mlogger() << status.error_code() << ":" << status.error_message();
-		}
-
 		return out;
 	}
 
-private:
-	grpc::Status unsafe_listTestcases (
-		std::unordered_set<std::string>& out)
+	testify::TransferName request;
+	request.set_name(tname);
+
+	grpc::Status status = unsafe_getTestcase(out, n, request);
+
+	for (size_t i = 0; i < cfg.nretry && false == status.ok(); ++i)
 	{
-		google::protobuf::Empty request;
-
-		grpc::ClientContext context;
-		std::chrono::system_clock::time_point deadline =
-			std::chrono::system_clock::now() + std::chrono::seconds(configs_.timeout);
-		context.set_deadline(deadline);
-
-		grpc::Status status(grpc::UNKNOWN, "obtained streaming reader is null");
-		auto reader = stub_->ListTestcases(&context, request);
-		if (nullptr != reader)
-		{
-			testify::TransferName tname;
-			while (reader->Read(&tname))
-			{
-				out.emplace(tname.name());
-			}
-			status = reader->Finish();
-		}
-		if (status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED)
-		{
-			set_health_job();
-			return grpc::Status(grpc::StatusCode::DEADLINE_EXCEEDED,
-				"Deadline exceeded or Client cancelled, abandoning.");
-		}
-		return status;
+		// assert: status is not fine, so log
+		// mlogger() << status.error_code() << ":" << status.error_message();
+		status = unsafe_getTestcase(out, n, request);
 	}
 
-	grpc::Status unsafe_getTestcase(
-		std::vector<testify::GeneratedCase>& out,
-		size_t nlimit, testify::TransferName& request)
+	if (false == status.ok())
 	{
-		grpc::ClientContext context;
-		std::chrono::system_clock::time_point deadline =
-			std::chrono::system_clock::now() + std::chrono::seconds(configs_.timeout);
-		context.set_deadline(deadline);
-
-		grpc::Status status(grpc::UNKNOWN, "obtained streaming reader is null");
-		auto reader = stub_->GetTestcase(&context, request);
-		if (nullptr != reader)
-		{
-			testify::GeneratedCase tout;
-			for (size_t i = 0; i < nlimit && reader->Read(&tout); ++i)
-			{
-				out.push_back(tout);
-			}
-			status = reader->Finish();
-		}
-		if (status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED)
-		{
-			set_health_job();
-			return grpc::Status(grpc::StatusCode::DEADLINE_EXCEEDED,
-				"Deadline exceeded or Client cancelled, abandoning.");
-		}
-		return status;
+		// mlogger() << status.error_code() << ":" << status.error_message();
 	}
 
-	void set_health_job (void)
-	{
-		reachable_ = false;
-		std::async(std::launch::async,
-		[this]()
-		{
-			while (false == reachable_)
-			{
-				std::this_thread::sleep_for(std::chrono::seconds(health_interval));
-				// check health
-				grpc::ClientContext context;
-				std::chrono::system_clock::time_point deadline =
-					std::chrono::system_clock::now() + std::chrono::seconds(configs_.timeout);
-				context.set_deadline(deadline);
-				google::protobuf::Empty empty;
-				testify::HealthCheckResponse resp;
-				auto status = stub_->CheckHealth(&context, empty, &resp);
-				reachable_ = status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED;
-			}
-		});
-	}
+	return out;
+}
 
-	std::atomic<bool> reachable_;
-
-	std::unique_ptr<testify::Dora::Stub> stub_;
-
-	ClientConfig configs_;
-};
-
-static DoraClient* client = nullptr;
-static size_t ntests = 50;
-
-void INIT (std::string host, size_t nrepeats, ClientConfig configs)
+void INIT (ClientConfig configs)
 {
-	ntests = nrepeats;
-	client = new DoraClient(grpc::CreateChannel(host,
-		grpc::InsecureChannelCredentials()), configs);
+	cfg = configs;
+	stub = testify::Dora::NewStub(grpc::CreateChannel(configs.host,
+		grpc::InsecureChannelCredentials()));
+	health_job = new std::thread([]()
+	{
+		std::mutex nothing;
+		std::unique_lock<std::mutex> lock(nothing);
+		while (keep_check.load())
+		{
+			// check health
+			grpc::ClientContext context;
+			std::chrono::system_clock::time_point deadline =
+				std::chrono::system_clock::now() + std::chrono::seconds(cfg.timeout);
+			context.set_deadline(deadline);
+			google::protobuf::Empty empty;
+			testify::HealthCheckResponse resp;
+			auto status = stub->CheckHealth(&context, empty, &resp);
+			auto ecode = status.error_code();
+			reachable = ecode != grpc::StatusCode::DEADLINE_EXCEEDED &&
+				ecode != grpc::StatusCode::UNAVAILABLE;
+			stop_check.wait_for(lock, std::chrono::seconds(health_interval));
+		}
+	});
 }
 
 void SHUTDOWN (void)
 {
-	if (client != nullptr)
-	{
-		delete client;
-	}
-	client = nullptr;
+	keep_check = false;
+    stop_check.notify_all();
+	health_job->join();
+	delete health_job;
+	stub.reset();
 	google::protobuf::ShutdownProtobufLibrary();
 }
 
 std::vector<testify::GeneratedCase> get_cases (std::string tname)
 {
-	if (nullptr == client)
+	if (nullptr == stub)
 	{
 		throw std::runtime_error("client not initialized");
 	}
 
 	bool found = false;
 	std::unordered_set<std::string> names;
-	if (client->ListTestcases(names))
+	if (ListTestcases(names))
 	{
 		found = names.find(tname) != names.end();
 	}
@@ -202,7 +171,7 @@ std::vector<testify::GeneratedCase> get_cases (std::string tname)
 	std::vector<testify::GeneratedCase> out;
 	if (found)
 	{
-		out = client->GetTestcase(ntests, tname);
+		out = GetTestcase(cfg.grab_ncases, tname);
 	}
 	return out;
 }

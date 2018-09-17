@@ -144,26 +144,24 @@ int main (int argc, char** argv)
 	std::unique_lock<std::mutex> lck(mtx);
 	server_started.wait_for(lck,std::chrono::seconds(1));
 
-	size_t nreps;
+	antero::ClientConfig cfg;
 	char* nrepeats = getenv("GTEST_REPEAT");
 	if (nrepeats == nullptr)
 	{
-		nreps = 100;
+		cfg.grab_ncases = 100;
 	}
 	else
 	{
-		nreps = atoi(nrepeats);
+		cfg.grab_ncases = atoi(nrepeats);
 	}
-	antero::INIT(server_addr, nreps);
+	cfg.host = server_addr;
+	antero::INIT(cfg);
 
 	::testing::InitGoogleTest(&argc, argv);
 	int ret = RUN_ALL_TESTS();
 
 	antero::SHUTDOWN();
 
-	std::chrono::system_clock::time_point deadline =
-		std::chrono::system_clock::now() + std::chrono::seconds(10);
-	server->Shutdown(deadline);
 	server.reset(nullptr);
 	th.join();
 

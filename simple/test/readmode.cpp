@@ -188,9 +188,6 @@ int main (int argc, char** argv)
 
 	simple::SHUTDOWN();
 
-	std::chrono::system_clock::time_point deadline =
-		std::chrono::system_clock::now() + std::chrono::seconds(10);
-	server->Shutdown(deadline);
 	server.reset(nullptr);
 	th.join();
 

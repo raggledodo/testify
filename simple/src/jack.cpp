@@ -344,19 +344,19 @@ void INIT (std::string server_addr, bool genmode, size_t nretries)
 	TestModel::GENERATE_MODE = genmode;
 	try
 	{
-		size_t nreps;
+		antero::ClientConfig config;
 		char* nrepeats = getenv("GTEST_REPEAT");
 		if (nrepeats == nullptr)
 		{
-			nreps = 100;
+			config.grab_ncases = 100;
 		}
 		else
 		{
-			nreps = atoi(nrepeats);
+			config.grab_ncases = atoi(nrepeats);
 		}
-		antero::ClientConfig config;
+		config.host = server_addr;
 		config.nretry = nretries;
-		antero::INIT(server_addr, nreps, config);
+		antero::INIT(config);
 	}
 	catch (...)
 	{

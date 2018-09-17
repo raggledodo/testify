@@ -212,9 +212,6 @@ int main (int argc, char** argv)
 
 	simple::SHUTDOWN();
 
-	std::chrono::system_clock::time_point deadline =
-		std::chrono::system_clock::now() + std::chrono::seconds(10);
-	server->Shutdown(deadline);
 	server.reset(nullptr);
 	th.join();
 
@@ -240,18 +237,18 @@ TEST_F(JACK, Send)
 
 	for (double d : dbs)
 	{
-		EXPECT_LT(dbrange.min_, d);
-		EXPECT_GT(dbrange.max_, d);
+		EXPECT_LE(dbrange.min_, d);
+		EXPECT_GE(dbrange.max_, d);
 	}
 
 	for (int32_t l : its)
 	{
-		EXPECT_LT(irange.min_, l);
-		EXPECT_GT(irange.max_, l);
+		EXPECT_LE(irange.min_, l);
+		EXPECT_GE(irange.max_, l);
 	}
 
-	EXPECT_LT(srange.min_, scalar);
-	EXPECT_GT(srange.max_, scalar);
+	EXPECT_LE(srange.min_, scalar);
+	EXPECT_GE(srange.max_, scalar);
 
 	optional<std::vector<double>> exds = sess->expect_double("expect_dbs");
 	optional<std::vector<int32_t>> exis = sess->expect_int("expect_its");

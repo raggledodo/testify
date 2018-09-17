@@ -11,14 +11,14 @@ namespace antero
 
 struct ClientConfig
 {
-	ClientConfig (void) {}
-
+	std::string host;
+	size_t grab_ncases = 50;
 	size_t nretry = 0;
 	size_t timeout = 3;
+	size_t health_interval = 30;
 };
 
-void INIT (std::string host, size_t nrepeats,
-	ClientConfig configs = ClientConfig());
+void INIT (ClientConfig configs = ClientConfig());
 
 void SHUTDOWN (void);
 

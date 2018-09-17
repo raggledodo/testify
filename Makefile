@@ -26,7 +26,7 @@ test_anteroc:
 	$(TEST) $(GTEST_FLAGS) --action_env="GTEST_REPEAT=50" @com_github_mingkaic_testify//anteroc:test
 
 test_jack:
-	$(TEST) $(GTEST_FLAGS) @com_github_mingkaic_testify//simple:test_gen
-	$(TEST) $(GTEST_FLAGS) @com_github_mingkaic_testify//simple:test_read
-	$(TEST) $(GTEST_FLAGS) @com_github_mingkaic_testify//simple:test_genoffline
-	$(TEST) $(GTEST_FLAGS) @com_github_mingkaic_testify//simple:test_readoffline
+	$(TEST) $(GTEST_FLAGS) --action_env="GTEST_REPEAT=50" @com_github_mingkaic_testify//simple:test_gen
+	$(TEST) $(GTEST_FLAGS) --action_env="GTEST_REPEAT=50" @com_github_mingkaic_testify//simple:test_read
+	$(TEST) $(GTEST_FLAGS) --action_env="GTEST_REPEAT=50" @com_github_mingkaic_testify//simple:test_genoffline
+	$(TEST) $(GTEST_FLAGS) --action_env="GTEST_REPEAT=50" @com_github_mingkaic_testify//simple:test_readoffline
