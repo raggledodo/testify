@@ -8,8 +8,6 @@ filegroup(
     name = "srcs",
     srcs = glob([
         "*.hpp",
-        "include/*.hpp",
-        "include/*.ipp",
         "src/*.cpp",
     ]) + ["BUILD"],
 )
@@ -19,11 +17,7 @@ filegroup(
 cc_library(
     name = "retroc",
     hdrs = glob(["*.hpp"]),
-    srcs = glob([
-        "src/*.cpp",
-        "include/*.hpp",
-        "include/*.ipp",
-    ]),
+    srcs = glob(["src/*.cpp"]),
     copts = ["-std=c++14"],
     deps = ["//proto:cc_proto"],
 )

@@ -9,6 +9,8 @@ using namespace std::experimental;
 
 struct iSession
 {
+	virtual ~iSession (void) = default;
+
 	virtual std::vector<double> get_double (std::string usage, size_t len,
 		Range<double> range = Range<double>()) = 0;
 

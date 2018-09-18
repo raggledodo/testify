@@ -378,13 +378,10 @@ void INIT (std::string server_addr, bool genmode, size_t nretries)
 
 void SHUTDOWN (void)
 {
+	antero::SHUTDOWN();
 	if (TestModel::GENERATE_MODE)
 	{
 		retro::SHUTDOWN();
-	}
-	else
-	{
-		antero::SHUTDOWN();
 	}
 }
 

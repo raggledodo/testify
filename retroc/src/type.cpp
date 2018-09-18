@@ -1,4 +1,4 @@
-#include "retroc/include/type.hpp"
+#include "retroc/type.hpp"
 
 #ifdef TYPE_HPP
 
