@@ -68,18 +68,18 @@ valgrind_retroc_rand:
 valgrind_jack: valgrind_jackgen valgrind_jackread valgrind_jackoffline
 
 valgrind_jackgen:
-	$(GTEST) $(VAL_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_gen
+	$(GTEST) $(VAL_BZL_FLAGS) --action_env="GTEST_REPEAT=15" @com_github_mingkaic_testify//simple:test_gen
 
 valgrind_jackread:
-	$(GTEST) $(VAL_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_read
+	$(GTEST) $(VAL_BZL_FLAGS) --action_env="GTEST_REPEAT=15" @com_github_mingkaic_testify//simple:test_read
 
 valgrind_jackoffline: valgrind_jackgenoffline valgrind_jackreadoffline
 
 valgrind_jackgenoffline:
-	$(GTEST) $(VAL_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_genoffline
+	$(GTEST) $(VAL_BZL_FLAGS) --action_env="GTEST_REPEAT=15" @com_github_mingkaic_testify//simple:test_genoffline
 
 valgrind_jackreadoffline:
-	$(GTEST) $(VAL_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_readoffline
+	$(GTEST) $(VAL_BZL_FLAGS) --action_env="GTEST_REPEAT=15" @com_github_mingkaic_testify//simple:test_readoffline
 
 # asan unit tests
 
@@ -96,15 +96,15 @@ asan_retroc_rand:
 asan_jack: asan_jackgen asan_jackread asan_jackoffline
 
 asan_jackgen:
-	$(GTEST) $(ASAN_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_gen
+	$(GTEST) $(ASAN_BZL_FLAGS) $(REP_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_gen
 
 asan_jackread:
-	$(GTEST) $(ASAN_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_read
+	$(GTEST) $(ASAN_BZL_FLAGS) $(REP_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_read
 
 asan_jackoffline: asan_jackgenoffline asan_jackreadoffline
 
 asan_jackgenoffline:
-	$(GTEST) $(ASAN_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_genoffline
+	$(GTEST) $(ASAN_BZL_FLAGS) $(REP_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_genoffline
 
 asan_jackreadoffline:
-	$(GTEST) $(ASAN_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_readoffline
+	$(GTEST) $(ASAN_BZL_FLAGS) $(REP_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_readoffline
