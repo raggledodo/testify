@@ -8,6 +8,8 @@ REP_BZL_FLAGS := --action_env="GTEST_REPEAT=$(GTEST_REPEAT)"
 
 VAL_BZL_FLAGS := --run_under="valgrind --leak-check=full"
 
+ASAN_BZL_FLAGS := --linkopt -fsanitize=address
+
 TEST := bazel test $(COMMON_BZL_FLAGS)
 
 GTEST := $(TEST) $(GTEST_FLAGS)
@@ -53,6 +55,16 @@ test_jackreadoffline:
 
 # valgrind unit tests
 
+valgrind: valgrind_retroc valgrind_jack
+
+valgrind_retroc: valgrind_retroc_client valgrind_retroc_rand
+
+valgrind_retroc_client:
+	$(GTEST) $(VAL_BZL_FLAGS) @com_github_mingkaic_testify//retroc:test_client
+
+valgrind_retroc_rand:
+	$(GTEST) $(VAL_BZL_FLAGS) --action_env="GTEST_REPEAT=3" @com_github_mingkaic_testify//retroc:test_rand
+
 valgrind_jack: valgrind_jackgen valgrind_jackread valgrind_jackoffline
 
 valgrind_jackgen:
@@ -68,3 +80,31 @@ valgrind_jackgenoffline:
 
 valgrind_jackreadoffline:
 	$(GTEST) $(VAL_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_readoffline
+
+# asan unit tests
+
+asan: asan_retroc asan_jack
+
+asan_retroc: asan_retroc_client asan_retroc_rand
+
+asan_retroc_client:
+	$(GTEST) $(ASAN_BZL_FLAGS) @com_github_mingkaic_testify//retroc:test_client
+
+asan_retroc_rand:
+	$(GTEST) $(ASAN_BZL_FLAGS) $(REP_BZL_FLAGS) @com_github_mingkaic_testify//retroc:test_rand
+
+asan_jack: asan_jackgen asan_jackread asan_jackoffline
+
+asan_jackgen:
+	$(GTEST) $(ASAN_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_gen
+
+asan_jackread:
+	$(GTEST) $(ASAN_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_read
+
+asan_jackoffline: asan_jackgenoffline asan_jackreadoffline
+
+asan_jackgenoffline:
+	$(GTEST) $(ASAN_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_genoffline
+
+asan_jackreadoffline:
+	$(GTEST) $(ASAN_BZL_FLAGS) @com_github_mingkaic_testify//simple:test_readoffline

@@ -23,7 +23,7 @@ cc_library(
     srcs = glob(["src/*.cpp"]),
     copts = ["-std=c++14"],
     deps = [
-        "//proto:cc_proto",
+        "//client:cpp_client",
         "@com_google_googletest//:gtest",
     ],
 )

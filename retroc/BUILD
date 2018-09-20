@@ -19,7 +19,7 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     srcs = glob(["src/*.cpp"]),
     copts = ["-std=c++14"],
-    deps = ["//proto:cc_proto"],
+    deps = ["//client:cpp_client"],
 )
 
 ######### TEST #########

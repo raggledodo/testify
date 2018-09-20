@@ -1,0 +1,26 @@
+licenses(["notice"])
+
+package(
+    default_visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "srcs",
+    srcs = glob([
+        "*.hpp",
+        "src/*.cpp"
+    ]) + [
+        "BUILD",
+        "headers",
+    ],
+)
+
+######### LIBRARY #########
+
+cc_library(
+    name = "cpp_client",
+    hdrs = glob(["*.hpp"]),
+    srcs = glob(["src/*.cpp"]),
+    copts = ["-std=c++14"],
+    deps = ["//proto:cc_proto"],
+)

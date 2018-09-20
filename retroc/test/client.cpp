@@ -82,6 +82,13 @@ struct MockService final : public testify::Dora::Service
 	{
 		return grpc::Status::OK;
 	}
+
+	grpc::Status CheckHealth (grpc::ServerContext* context,
+		const google::protobuf::Empty*, testify::HealthCheckResponse* response) override
+	{
+		response->set_status(testify::HealthCheckResponse::SERVING);
+		return grpc::Status::OK;
+	}
 };
 
 
@@ -126,7 +133,9 @@ int main (int argc, char** argv)
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
 	server_started.wait_for(lck,std::chrono::seconds(1));
-	retro::INIT(server_addr); // no retries
+	ClientConfig cfg;
+	cfg.host = server_addr;
+	retro::INIT(cfg);
 
 	::testing::InitGoogleTest(&argc, argv);
 	int ret = RUN_ALL_TESTS();

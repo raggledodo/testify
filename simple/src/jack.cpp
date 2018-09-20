@@ -155,7 +155,7 @@ struct GenSession final : public ModelledSession
 
 	~GenSession (void)
 	{
-		if (io_.can_send() && can_send_)
+		if (io_.can_send() && retro::can_send() && can_send_)
 		{
 			io_.send_case();
 		}
@@ -342,21 +342,22 @@ void INIT (std::string server_addr, bool genmode, size_t nretries)
 	get_engine().seed(seed);
 
 	TestModel::GENERATE_MODE = genmode;
+	ClientConfig config;
+	config.host = server_addr;
+	config.nretry = nretries;
 	try
 	{
-		antero::ClientConfig config;
+		size_t grab_ncases;
 		char* nrepeats = getenv("GTEST_REPEAT");
 		if (nrepeats == nullptr)
 		{
-			config.grab_ncases = 100;
+			grab_ncases = 100;
 		}
 		else
 		{
-			config.grab_ncases = atoi(nrepeats);
+			grab_ncases = atoi(nrepeats);
 		}
-		config.host = server_addr;
-		config.nretry = nretries;
-		antero::INIT(config);
+		antero::INIT(grab_ncases, config);
 	}
 	catch (...)
 	{
@@ -368,9 +369,7 @@ void INIT (std::string server_addr, bool genmode, size_t nretries)
 	{
 		try
 		{
-			retro::ClientConfig config;
-			config.nretry = nretries;
-			retro::INIT(server_addr, config);
+			retro::INIT(config);
 		}
 		catch (...) {} // it's ok gen session cache data locally
 	}

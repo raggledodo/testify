@@ -53,9 +53,9 @@ static int32_t scalar;
 static std::string str;
 
 // generated outputs
-static std::vector<double> exdbs = {0.12, 33.2, 12};
-static std::vector<int32_t> exlng = {12, 332, 112};
-static std::string exstr = "dfq123p412m@sq#";
+static std::vector<double> global_exdbs = {0.12, 33.2, 12};
+static std::vector<int32_t> global_exlng = {12, 332, 112};
+static std::string global_exstr = "dfq123p412m@sq#";
 
 // expected outputs
 static std::vector<double> dubs = {123.22, 252.3, 1.552};
@@ -159,9 +159,9 @@ struct MockService final : public testify::Dora::Service
 		entry_lngdata.mutable_data()->UnpackTo(&got_entryits);
 		entry_strdata.mutable_data()->UnpackTo(&got_entrystrs);
 
-		assert(std::equal(exdbs.begin(), exdbs.end(), got_entrydbs.data().begin()));
-		assert(std::equal(exlng.begin(), exlng.end(), got_entryits.data().begin()));
-		assert(0 == exstr.compare(got_entrystrs.data()));
+		assert(std::equal(global_exdbs.begin(), global_exdbs.end(), got_entrydbs.data().begin()));
+		assert(std::equal(global_exlng.begin(), global_exlng.end(), got_entryits.data().begin()));
+		assert(0 == global_exstr.compare(got_entrystrs.data()));
 
 		return grpc::Status::OK;
 	}
@@ -169,6 +169,13 @@ struct MockService final : public testify::Dora::Service
 	grpc::Status RemoveTestcase (grpc::ServerContext*,
 		const testify::TransferName*, google::protobuf::Empty*) override
 	{
+		return grpc::Status::OK;
+	}
+
+	grpc::Status CheckHealth (grpc::ServerContext* context,
+		const google::protobuf::Empty*, testify::HealthCheckResponse* response) override
+	{
+		response->set_status(testify::HealthCheckResponse::SERVING);
 		return grpc::Status::OK;
 	}
 };
@@ -266,7 +273,7 @@ TEST_F(JACK, Send)
 	EXPECT_ARREQ(lngs, exisvec);
 	EXPECT_STREQ(strs.c_str(), exstrvec.c_str());
 
-	sess->store_double("entry_double", exdsvec);
-	sess->store_int("entry_int32_t", exisvec);
-	sess->store_string("entry_string", exstrvec);
+	sess->store_double("entry_double", global_exdbs);
+	sess->store_int("entry_int32_t", global_exlng);
+	sess->store_string("entry_string", global_exstr);
 }

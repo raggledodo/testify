@@ -147,6 +147,13 @@ struct MockService final : public testify::Dora::Service
 	{
 		return grpc::Status::OK;
 	}
+
+	grpc::Status CheckHealth (grpc::ServerContext* context,
+		const google::protobuf::Empty*, testify::HealthCheckResponse* response) override
+	{
+		response->set_status(testify::HealthCheckResponse::SERVING);
+		return grpc::Status::OK;
+	}
 };
 
 

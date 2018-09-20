@@ -9,12 +9,13 @@ testify::GeneratedCase Testament::get (std::string testname)
 	if (cases_.end() == it)
 	{
 		auto upout = antero::get_cases(testname);
-		if (upout.empty())
+		if (false == (bool) upout || upout->empty())
 		{
 			throw std::runtime_error("testcase returned empty: " + testname);
 		}
+		auto upvec = *upout;
 		cases_[testname] =
-			std::list<testify::GeneratedCase>(upout.begin(), upout.end());
+			std::list<testify::GeneratedCase>(upvec.begin(), upvec.end());
 	}
 	auto out = cases_[testname].front();
 	cases_[testname].pop_front();

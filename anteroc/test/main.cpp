@@ -112,6 +112,13 @@ struct MockService final : public testify::Dora::Service
 		return grpc::Status::OK;
 	}
 
+	grpc::Status CheckHealth (grpc::ServerContext* context,
+		const google::protobuf::Empty*, testify::HealthCheckResponse* response) override
+	{
+		response->set_status(testify::HealthCheckResponse::SERVING);
+		return grpc::Status::OK;
+	}
+
 	google::protobuf::Map<std::string,testify::Cases> dmap_;
 };
 
@@ -144,18 +151,19 @@ int main (int argc, char** argv)
 	std::unique_lock<std::mutex> lck(mtx);
 	server_started.wait_for(lck,std::chrono::seconds(1));
 
-	antero::ClientConfig cfg;
+	ClientConfig cfg;
+	size_t grab_ncases;
 	char* nrepeats = getenv("GTEST_REPEAT");
 	if (nrepeats == nullptr)
 	{
-		cfg.grab_ncases = 100;
+		grab_ncases = 100;
 	}
 	else
 	{
-		cfg.grab_ncases = atoi(nrepeats);
+		grab_ncases = atoi(nrepeats);
 	}
 	cfg.host = server_addr;
-	antero::INIT(cfg);
+	antero::INIT(grab_ncases, cfg);
 
 	::testing::InitGoogleTest(&argc, argv);
 	int ret = RUN_ALL_TESTS();
