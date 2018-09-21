@@ -21,6 +21,8 @@ struct iSession
 
 	virtual std::string get_string (std::string usage, size_t len) = 0;
 
+	virtual std::vector<uint64_t> choose (std::string usage, uint64_t n, uint64_t k) = 0;
+
 
 	virtual optional<std::vector<double>> expect_double (std::string usage) = 0;
 

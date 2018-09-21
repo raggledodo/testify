@@ -31,9 +31,11 @@ static std::vector<double> unpack_double (const google::protobuf::Any& data, tes
 	return out;
 }
 
-static std::vector<int32_t> unpack_int (const google::protobuf::Any& data, testify::DTYPE type)
+template <typename T>
+static std::vector<T> unpack_int (const google::protobuf::Any& data, testify::DTYPE type)
 {
-	std::vector<int32_t> out;
+	static_assert(std::is_integral<T>::value, "Integral required.");
+	std::vector<T> out;
 	switch (type)
 	{
 		case testify::INT64S:
@@ -41,7 +43,7 @@ static std::vector<int32_t> unpack_int (const google::protobuf::Any& data, testi
 			testify::Int64s arr;
 			data.UnpackTo(&arr);
 			auto temp = arr.data();
-			out = std::vector<int32_t>(temp.begin(), temp.end());
+			out = std::vector<T>(temp.begin(), temp.end());
 		}
 		break;
 		case testify::UINT64S:
@@ -49,7 +51,7 @@ static std::vector<int32_t> unpack_int (const google::protobuf::Any& data, testi
 			testify::Uint64s arr;
 			data.UnpackTo(&arr);
 			auto temp = arr.data();
-			out = std::vector<int32_t>(temp.begin(), temp.end());
+			out = std::vector<T>(temp.begin(), temp.end());
 		}
 		break;
 		case testify::INT32S:
@@ -57,7 +59,7 @@ static std::vector<int32_t> unpack_int (const google::protobuf::Any& data, testi
 			testify::Int32s arr;
 			data.UnpackTo(&arr);
 			auto temp = arr.data();
-			out = std::vector<int32_t>(temp.begin(), temp.end());
+			out = std::vector<T>(temp.begin(), temp.end());
 		}
 		break;
 		case testify::UINT32S:
@@ -65,7 +67,7 @@ static std::vector<int32_t> unpack_int (const google::protobuf::Any& data, testi
 			testify::Uint32s arr;
 			data.UnpackTo(&arr);
 			auto temp = arr.data();
-			out = std::vector<int32_t>(temp.begin(), temp.end());
+			out = std::vector<T>(temp.begin(), temp.end());
 		}
 		break;
 		case testify::BYTES:
@@ -73,7 +75,7 @@ static std::vector<int32_t> unpack_int (const google::protobuf::Any& data, testi
 			testify::Bytes arr;
 			data.UnpackTo(&arr);
 			auto temp = arr.data();
-			out = std::vector<int32_t>(temp.begin(), temp.end());
+			out = std::vector<T>(temp.begin(), temp.end());
 		}
 		break;
 		default:
@@ -127,7 +129,7 @@ struct ModelledSession : public iSession
 		auto it = outputs.find(usage);
 		if (outputs.end() != it)
 		{
-			out = unpack_int(it->second.data(), it->second.dtype());
+			out = unpack_int<int32_t>(it->second.data(), it->second.dtype());
 		}
 		return out;
 	}
@@ -181,6 +183,11 @@ struct GenSession final : public ModelledSession
 	std::string get_string (std::string usage, size_t len) override
 	{
 		return io_.get_string(usage, len);
+	}
+
+	std::vector<uint64_t> choose (std::string usage, uint64_t n, uint64_t k) override
+	{
+		return io_.choose(usage, n, k);
 	}
 
 
@@ -256,7 +263,7 @@ struct OutSession final : public ModelledSession
 			{
 				throw std::runtime_error(usage + " not found");
 			}
-			std::vector<int32_t> out = unpack_int(it->second.data(), it->second.dtype());
+			std::vector<int32_t> out = unpack_int<int32_t>(it->second.data(), it->second.dtype());
 			if (out.size() != len)
 			{
 				throw std::runtime_error("extracted int32_t vec invalid length");
@@ -301,6 +308,29 @@ struct OutSession final : public ModelledSession
 		catch (...)
 		{
 			return ::get_string(len);
+		}
+	}
+
+	std::vector<uint64_t> choose (std::string usage, uint64_t n, uint64_t k) override
+	{
+		try
+		{
+			auto& inputs = gcase_.inputs();
+			auto it = inputs.find(usage);
+			if (inputs.end() == it)
+			{
+				throw std::runtime_error(usage + " not found");
+			}
+			std::vector<uint64_t> out = unpack_int<uint64_t>(it->second.data(), it->second.dtype());
+			if (out.size() != k)
+			{
+				throw std::runtime_error("extracted uint64_t vec invalid length");
+			}
+			return out;
+		}
+		catch (...)
+		{
+			return ::choose(n, k);;
 		}
 	}
 

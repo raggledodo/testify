@@ -51,6 +51,7 @@ static std::vector<double> dbs;
 static std::vector<int32_t> its;
 static int32_t scalar;
 static std::string str;
+static std::vector<uint64_t> choices;
 
 // generated outputs
 static std::vector<double> global_exdbs = {0.12, 33.2, 12};
@@ -237,10 +238,12 @@ TEST_F(JACK, Send)
 	its = sess->get_int("its", 11, irange);
 	scalar = sess->get_scalar("scalar", srange);
 	str = sess->get_string("str", 12);
+	choices = sess->choose("choices", 52, 13);
 
 	EXPECT_EQ(10, dbs.size());
 	EXPECT_EQ(11, its.size());
 	EXPECT_EQ(12, str.size());
+	EXPECT_EQ(13, choices.size());
 
 	for (double d : dbs)
 	{
@@ -252,6 +255,11 @@ TEST_F(JACK, Send)
 	{
 		EXPECT_LE(irange.min_, l);
 		EXPECT_GE(irange.max_, l);
+	}
+
+	for (uint64_t l : choices)
+	{
+		EXPECT_GT(52, l);
 	}
 
 	EXPECT_LE(srange.min_, scalar);
