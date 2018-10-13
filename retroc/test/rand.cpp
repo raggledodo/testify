@@ -26,7 +26,7 @@ int main (int argc, char** argv)
 
 template <typename Arr>
 void vec_randomness (Arr vec, Arr vec2,
-	retro::Range<retro::IterType<typename Arr::iterator> > range,
+	retro::Range<retro::IterT<typename Arr::iterator> > range,
 	size_t n, double similarity_thresh)
 {
 	// constraint

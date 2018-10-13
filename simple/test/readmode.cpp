@@ -195,7 +195,7 @@ int main (int argc, char** argv)
 
 TEST_F(JACK, Send)
 {
-	simple::SESSION sess = get_session("JACK::Send");
+	simple::SessionT sess = get_session("JACK::Send");
 
 	retro::Range<double> dbrange{-10.4, 453.2};
 	retro::Range<int32_t> irange{-104, 452242};

@@ -16,7 +16,7 @@ struct GenIO
 
 	template <typename Iterator>
 	void get_vec (std::string usage, Iterator begin, Iterator end,
-		Range<IterType<Iterator>> range = Range<IterType<Iterator>>())
+		Range<IterT<Iterator>> range = Range<IterT<Iterator>>())
 	{
 		retro::get_vec(begin, end, range);
 		testify::CaseData input;
@@ -136,7 +136,7 @@ private:
 	template <typename Iterator>
 	void serialize (testify::CaseData& out, Iterator begin, Iterator end)
 	{
-		dora::DtypeT type = dora::get_type<IterType<Iterator>>();
+		dora::DtypeT type = dora::get_type<IterT<Iterator>>();
 		switch (type)
 		{
 			case dora::DtypeT::kDbytes:

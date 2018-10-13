@@ -47,7 +47,7 @@ struct iSession
 	virtual void clear (void) = 0;
 };
 
-using SESSION = std::unique_ptr<iSession>;
+using SessionT = std::unique_ptr<iSession>;
 
 struct TestModel : public antero::Testament
 {
@@ -65,9 +65,9 @@ protected:
 		active_.reset();
 	}
 
-	SESSION get_session (std::string testname);
+	SessionT get_session (std::string testname);
 
-	SESSION active_;
+	SessionT active_;
 };
 
 void INIT (std::string server_addr, const char* certfile,

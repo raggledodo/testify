@@ -13,7 +13,7 @@ namespace retro
 using EngineT = std::default_random_engine;
 
 template <typename Iterator>
-using IterType = typename std::iterator_traits<Iterator>::value_type;
+using IterT = typename std::iterator_traits<Iterator>::value_type;
 
 EngineT& get_engine (void);
 
@@ -81,9 +81,9 @@ struct ItHelper<Iterator,float>
 };
 
 template <typename Iterator>
-void get_vec (Iterator begin, Iterator end, Range<IterType<Iterator> > range)
+void get_vec (Iterator begin, Iterator end, Range<IterT<Iterator> > range)
 {
-	ItHelper<Iterator,IterType<Iterator> >::get_vec(begin, end, range);
+	ItHelper<Iterator,IterT<Iterator> >::get_vec(begin, end, range);
 }
 
 template <typename T>

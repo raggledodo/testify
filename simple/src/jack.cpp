@@ -336,7 +336,7 @@ struct OutSession final : public ModelledSession
 	void clear (void) override {}
 };
 
-SESSION TestModel::get_session (std::string testname)
+SessionT TestModel::get_session (std::string testname)
 {
 	testify::GeneratedCase model;
 	try
@@ -344,7 +344,7 @@ SESSION TestModel::get_session (std::string testname)
 		model = get(testname);
 		if (false == GENERATE_MODE)
 		{
-			return SESSION(new OutSession(model));
+			return SessionT(new OutSession(model));
 		}
 	}
 	catch (...) // fall back on generation mode
@@ -352,7 +352,7 @@ SESSION TestModel::get_session (std::string testname)
 		// log
 	}
 	TestModel::GENERATE_MODE = true;
-	return SESSION(new GenSession(model, testname));
+	return SessionT(new GenSession(model, testname));
 }
 
 void INIT (std::string server_addr, const char* certfile, bool genmode, size_t nretries)
