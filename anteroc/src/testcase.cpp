@@ -1,5 +1,8 @@
 #include "anteroc/testcase.hpp"
 
+namespace antero
+{
+
 static std::unordered_map<std::string,
 	std::list<testify::GeneratedCase> > cases_;
 
@@ -24,4 +27,6 @@ testify::GeneratedCase Testament::get (std::string testname)
 		cases_.erase(testname);
 	}
 	return out;
+}
+
 }

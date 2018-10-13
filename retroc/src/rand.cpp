@@ -3,11 +3,14 @@
 
 #include "retroc/rand.hpp"
 
-#ifdef RAND_HPP
+#ifdef RETRO_RAND_HPP
 
-ENGINE& get_engine (void)
+namespace retro
 {
-	static ENGINE engine;
+
+EngineT& get_engine (void)
+{
+	static EngineT engine;
 	return engine;
 }
 
@@ -32,6 +35,8 @@ std::vector<uint64_t> choose (uint64_t n, uint64_t k)
 	std::shuffle(output.begin(), output.end(), get_engine());
 	auto it = output.begin();
 	return std::vector<uint64_t>(it, it + k);
+}
+
 }
 
 #endif

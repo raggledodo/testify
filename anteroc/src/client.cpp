@@ -5,11 +5,11 @@
 namespace antero
 {
 
-static std::unique_ptr<DoraClient> client = nullptr;
+static std::unique_ptr<dora::DoraClient> client = nullptr;
 
-void INIT (ClientConfig configs)
+void INIT (dora::ClientConfig configs)
 {
-	client = std::make_unique<DoraClient>(configs);
+	client = std::make_unique<dora::DoraClient>(configs);
 }
 
 void SHUTDOWN (void)

@@ -1,11 +1,14 @@
 #include "retroc/generate.hpp"
 
-#ifdef GEN_HPP
+#ifdef RETRO_GEN_HPP
+
+namespace retro
+{
 
 std::string GenIO::get_string (std::string usage, size_t len,
 	std::string content)
 {
-	auto out = ::get_string(len, content);
+	auto out = retro::get_string(len, content);
 	testify::CaseData input;
 	serialize(input, out.begin(), out.end());
 	gcase_.mutable_inputs()->insert({usage, input});
@@ -14,7 +17,7 @@ std::string GenIO::get_string (std::string usage, size_t len,
 
 std::vector<uint64_t> GenIO::choose (std::string usage, uint64_t n, uint64_t k)
 {
-	auto out = ::choose(n, k);
+	auto out = retro::choose(n, k);
 	testify::CaseData input;
 	serialize(input, out.begin(), out.end());
 	gcase_.mutable_inputs()->insert({usage, input});
@@ -29,6 +32,8 @@ void GenIO::send_case (void)
 	}
 	retro::send(testname_, gcase_);
 	gcase_.Clear();
+}
+
 }
 
 #endif

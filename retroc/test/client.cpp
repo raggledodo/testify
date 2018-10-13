@@ -37,7 +37,7 @@ std::string to_str (Iterator begin, Iterator end)
 
 
 template <size_t N>
-void EXPECT_GRAPHEQ (const Graph<N>& gr, const testify::Graph& pgr)
+void EXPECT_GRAPHEQ (const retro::Graph<N>& gr, const testify::Graph& pgr)
 {
 	ASSERT_EQ(N, pgr.nverts());
 	std::string encoding = pgr.matrix();
@@ -120,8 +120,8 @@ protected:
 void RunServer (void)
 {
 	MockService service;
-	std::string servercert = read_keycert("certs/server.crt");
-	std::string serverkey = read_keycert("certs/server.key");
+	std::string servercert = dora::read_keycert("certs/server.crt");
+	std::string serverkey = dora::read_keycert("certs/server.key");
 
 	grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp;
 	pkcp.private_key = serverkey;
@@ -149,16 +149,16 @@ void RunServer (void)
 int main (int argc, char** argv)
 {
 	size_t seed = std::time(nullptr);
-	get_engine().seed(seed);
+	retro::get_engine().seed(seed);
 
 	std::thread th(RunServer); // no recovery from bad server startup
 
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
 	server_started.wait_for(lck,std::chrono::seconds(1));
-	ClientConfig cfg;
+	dora::ClientConfig cfg;
 	cfg.host = server_addr;
-	cfg.cert = read_keycert("certs/server.crt");
+	cfg.cert = dora::read_keycert("certs/server.crt");
 	retro::INIT(cfg);
 
 	::testing::InitGoogleTest(&argc, argv);
@@ -176,13 +176,13 @@ int main (int argc, char** argv)
 TEST_F(CLIENT, CallVecs)
 {
 	std::string expect_label = "vecs";
-	GenIO io(expect_label);
-	auto vec0 = io.get_vec<double>("double_vec", 5, Range<double>(-10.2, 24.2));
-	auto vec1 = io.get_vec<float>("float_vec", 7, Range<float>(-235, 252));
-	auto vec2 = io.get_vec<int32_t>("int32_vec", 3, Range<int32_t>(-100, 252));
-	auto vec3 = io.get_vec<uint32_t>("uint32_vec", 2, Range<uint32_t>(100, 252));
-	auto vec4 = io.get_vec<int64_t>("int64_vec", 11, Range<int64_t>(-100, 252));
-	auto vec5 = io.get_vec<uint64_t>("uint64_vec", 13, Range<uint64_t>(100, 252));
+	retro::GenIO io(expect_label);
+	auto vec0 = io.get_vec<double>("double_vec", 5, retro::Range<double>(-10.2, 24.2));
+	auto vec1 = io.get_vec<float>("float_vec", 7, retro::Range<float>(-235, 252));
+	auto vec2 = io.get_vec<int32_t>("int32_vec", 3, retro::Range<int32_t>(-100, 252));
+	auto vec3 = io.get_vec<uint32_t>("uint32_vec", 2, retro::Range<uint32_t>(100, 252));
+	auto vec4 = io.get_vec<int64_t>("int64_vec", 11, retro::Range<int64_t>(-100, 252));
+	auto vec5 = io.get_vec<uint64_t>("uint64_vec", 13, retro::Range<uint64_t>(100, 252));
 
 	std::vector<uint8_t> out = {4, 12, 2, 19};
 	io.set_output("stdout", out.begin(), out.end());
@@ -255,7 +255,7 @@ TEST_F(CLIENT, CallVecs)
 TEST_F(CLIENT, CallStr)
 {
 	std::string expect_label = "strings";
-	GenIO io(expect_label);
+	retro::GenIO io(expect_label);
 	std::string instr = io.get_string("simplestring", 13);
 
 	std::vector<uint8_t> out = {5, 13, 3, 20};
@@ -294,7 +294,7 @@ TEST_F(CLIENT, CallStr)
 TEST_F(CLIENT, CallChoice)
 {
 	std::string expect_label = "choices";
-	GenIO io(expect_label);
+	retro::GenIO io(expect_label);
 	std::vector<uint64_t> carr = io.choose("choosevec", 19, 6);
 	auto it = io.select("carr", carr.begin(), carr.end());
 	size_t dist = std::distance(carr.begin(), it);
@@ -343,9 +343,9 @@ TEST_F(CLIENT, CallChoice)
 TEST_F(CLIENT, CallTree)
 {
 	std::string expect_label = "tree";
-	GenIO io(expect_label);
+	retro::GenIO io(expect_label);
 
-	Graph<13> tree;
+	retro::Graph<13> tree;
 	size_t root = io.get_minspan_tree("mstree", tree);
 
 	io.set_outtree("stdout", root, tree);
@@ -384,9 +384,9 @@ TEST_F(CLIENT, CallTree)
 TEST_F(CLIENT, CallGraph)
 {
 	std::string expect_label = "graph";
-	GenIO io(expect_label);
+	retro::GenIO io(expect_label);
 
-	Graph<17> graph;
+	retro::Graph<17> graph;
 	io.get_graph("reggraph", graph);
 
 	io.set_outgraph("stdout", graph);
@@ -423,9 +423,9 @@ TEST_F(CLIENT, CallGraph)
 TEST_F(CLIENT, CallCGraph)
 {
 	std::string expect_label = "cgraph";
-	GenIO io(expect_label);
+	retro::GenIO io(expect_label);
 
-	Graph<23> graph;
+	retro::Graph<23> graph;
 	io.get_conn_graph("congraph", graph);
 
 	io.set_outgraph("stdout", graph);

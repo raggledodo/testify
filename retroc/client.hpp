@@ -6,7 +6,7 @@
 namespace retro
 {
 
-void INIT (ClientConfig configs = ClientConfig());
+void INIT (dora::ClientConfig configs = dora::ClientConfig());
 
 void SHUTDOWN (void);
 
@@ -17,4 +17,4 @@ void send (std::string testname, testify::GeneratedCase& output);
 
 }
 
-#endif /* RETRO_CLIENT_HPP */
+#endif // RETRO_CLIENT_HPP

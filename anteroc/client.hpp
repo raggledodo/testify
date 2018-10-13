@@ -8,7 +8,7 @@
 namespace antero
 {
 
-void INIT (ClientConfig configs = ClientConfig());
+void INIT (dora::ClientConfig configs = dora::ClientConfig());
 
 void SHUTDOWN (void);
 
@@ -16,4 +16,4 @@ bool get_cases (std::vector<testify::GeneratedCase>& out, std::string tname);
 
 }
 
-#endif /* ANTERO_CLIENT_HPP */
+#endif // ANTERO_CLIENT_HPP

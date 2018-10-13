@@ -3,6 +3,11 @@
 
 #include "simple/jack.hpp"
 
+#ifdef SIMPLE_JACK_HPP
+
+namespace simple
+{
+
 bool TestModel::GENERATE_MODE = false;
 
 static std::vector<double> unpack_double (const testify::CaseData& gcase)
@@ -151,18 +156,18 @@ struct GenSession final : public ModelledSession
 	}
 
 	std::vector<double> get_double (std::string usage, size_t len,
-		Range<double> range = Range<double>()) override
+		retro::Range<double> range = retro::Range<double>()) override
 	{
 		return io_.get_vec<double>(usage, len, range);
 	}
 
 	std::vector<int32_t> get_int (std::string usage, size_t len,
-		Range<int32_t> range = Range<int32_t>()) override
+		retro::Range<int32_t> range = retro::Range<int32_t>()) override
 	{
 		return io_.get_vec<int32_t>(usage, len, range);
 	}
 
-	int32_t get_scalar (std::string usage, Range<int32_t> range = Range<int32_t>()) override
+	int32_t get_scalar (std::string usage, retro::Range<int32_t> range = retro::Range<int32_t>()) override
 	{
 		return io_.get_vec<int32_t>(usage, 1, range)[0];
 	}
@@ -199,7 +204,7 @@ struct GenSession final : public ModelledSession
 	}
 
 private:
-	GenIO io_;
+	retro::GenIO io_;
 
 	bool can_send_ = true;
 };
@@ -209,7 +214,7 @@ struct OutSession final : public ModelledSession
 	OutSession (testify::GeneratedCase gcase) : ModelledSession(gcase) {}
 
 	std::vector<double> get_double (std::string usage, size_t len,
-		Range<double> range = Range<double>()) override
+		retro::Range<double> range = retro::Range<double>()) override
 	{
 		try
 		{
@@ -235,12 +240,12 @@ struct OutSession final : public ModelledSession
 		}
 		catch (...)
 		{
-			return get_vec<double>(len, range);
+			return retro::get_vec<double>(len, range);
 		}
 	}
 
 	std::vector<int32_t> get_int (std::string usage, size_t len,
-		Range<int32_t> range = Range<int32_t>()) override
+		retro::Range<int32_t> range = retro::Range<int32_t>()) override
 	{
 		try
 		{
@@ -266,11 +271,11 @@ struct OutSession final : public ModelledSession
 		}
 		catch (...)
 		{
-			return get_vec<int32_t>(len, range);
+			return retro::get_vec<int32_t>(len, range);
 		}
 	}
 
-	int32_t get_scalar (std::string usage, Range<int32_t> range = Range<int32_t>()) override
+	int32_t get_scalar (std::string usage, retro::Range<int32_t> range = retro::Range<int32_t>()) override
 	{
 		return get_int(usage, 1, range)[0];
 	}
@@ -294,7 +299,7 @@ struct OutSession final : public ModelledSession
 		}
 		catch (...)
 		{
-			return ::get_string(len);
+			return retro::get_string(len);
 		}
 	}
 
@@ -317,7 +322,7 @@ struct OutSession final : public ModelledSession
 		}
 		catch (...)
 		{
-			return ::choose(n, k);;
+			return retro::choose(n, k);;
 		}
 	}
 
@@ -350,17 +355,14 @@ SESSION TestModel::get_session (std::string testname)
 	return SESSION(new GenSession(model, testname));
 }
 
-namespace simple
-{
-
 void INIT (std::string server_addr, const char* certfile, bool genmode, size_t nretries)
 {
 	size_t seed = std::time(nullptr);
-	get_engine().seed(seed);
+	retro::get_engine().seed(seed);
 
 	TestModel::GENERATE_MODE = genmode;
-	ClientConfig config;
-	config.cert = read_keycert(certfile);
+	dora::ClientConfig config;
+	config.cert = dora::read_keycert(certfile);
 	config.host = server_addr;
 	config.nretry = nretries;
 	try
@@ -393,3 +395,5 @@ void SHUTDOWN (void)
 }
 
 }
+
+#endif

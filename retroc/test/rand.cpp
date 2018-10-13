@@ -16,7 +16,7 @@ for (auto v : arr) {\
 int main (int argc, char** argv)
 {
 	size_t seed = std::time(nullptr);
-	get_engine().seed(seed);
+	retro::get_engine().seed(seed);
 
 	::testing::InitGoogleTest(&argc, argv);
 	int ret = RUN_ALL_TESTS();
@@ -26,7 +26,7 @@ int main (int argc, char** argv)
 
 template <typename Arr>
 void vec_randomness (Arr vec, Arr vec2,
-	Range<IterType<typename Arr::iterator> > range,
+	retro::Range<retro::IterType<typename Arr::iterator> > range,
 	size_t n, double similarity_thresh)
 {
 	// constraint
@@ -50,10 +50,10 @@ TEST(RANDO, GenDoubles)
 {
 	const double separation_metric = 0.01;
 	const double similarity_thresh = 0.1;
-	Range<double> range(-10.2, 24.2);
+	retro::Range<double> range(-10.2, 24.2);
 	size_t n = 5000;
-	auto vec = get_vec<double>(n, range);
-	auto vec2 = get_vec<double>(n, range);
+	auto vec = retro::get_vec<double>(n, range);
+	auto vec2 = retro::get_vec<double>(n, range);
 
 	vec_randomness(vec, vec2, range, n, similarity_thresh);
 
@@ -74,10 +74,10 @@ TEST(RANDO, GenFloats)
 {
 	const float separation_metric = 0.1;
 	const float similarity_thresh = 0.1;
-	Range<float> range(-235, 252);
+	retro::Range<float> range(-235, 252);
 	size_t n = 7000;
-	auto vec = get_vec<float>(n, range);
-	auto vec2 = get_vec<float>(n, range);
+	auto vec = retro::get_vec<float>(n, range);
+	auto vec2 = retro::get_vec<float>(n, range);
 
 	vec_randomness(vec, vec2, range, n, similarity_thresh);
 
@@ -98,10 +98,10 @@ TEST(RANDO, GenInt32s)
 {
 	const double separation_metric = 1;
 	const double similarity_thresh = 0.1;
-	Range<int32_t> range(-100, 252);
+	retro::Range<int32_t> range(-100, 252);
 	size_t n = 3000;
-	auto vec = get_vec<int32_t>(n, range);
-	auto vec2 = get_vec<int32_t>(n, range);
+	auto vec = retro::get_vec<int32_t>(n, range);
+	auto vec2 = retro::get_vec<int32_t>(n, range);
 
 	vec_randomness(vec, vec2, range, n, similarity_thresh);
 
@@ -122,10 +122,10 @@ TEST(RANDO, GenUint32s)
 {
 	const double separation_metric = 1;
 	const double similarity_thresh = 0.1;
-	Range<uint32_t> range(100, 252);
+	retro::Range<uint32_t> range(100, 252);
 	size_t n = 6000;
-	auto vec = get_vec<uint32_t>(n, range);
-	auto vec2 = get_vec<uint32_t>(n, range);
+	auto vec = retro::get_vec<uint32_t>(n, range);
+	auto vec2 = retro::get_vec<uint32_t>(n, range);
 
 	vec_randomness(vec, vec2, range, n, similarity_thresh);
 
@@ -146,10 +146,10 @@ TEST(RANDO, GenInt64s)
 {
 	const double separation_metric = 1;
 	const double similarity_thresh = 0.1;
-	Range<int64_t> range(-100, 252);
+	retro::Range<int64_t> range(-100, 252);
 	size_t n = 5500;
-	auto vec = get_vec<int64_t>(n, range);
-	auto vec2 = get_vec<int64_t>(n, range);
+	auto vec = retro::get_vec<int64_t>(n, range);
+	auto vec2 = retro::get_vec<int64_t>(n, range);
 
 	vec_randomness(vec, vec2, range, n, similarity_thresh);
 
@@ -170,10 +170,10 @@ TEST(RANDO, GenUint64s)
 {
 	const double separation_metric = 1;
 	const double similarity_thresh = 0.1;
-	Range<uint64_t> range(100, 252);
+	retro::Range<uint64_t> range(100, 252);
 	size_t n = 6000;
-	auto vec = get_vec<uint64_t>(n, range);
-	auto vec2 = get_vec<uint64_t>(n, range);
+	auto vec = retro::get_vec<uint64_t>(n, range);
+	auto vec2 = retro::get_vec<uint64_t>(n, range);
 
 	vec_randomness(vec, vec2, range, n, similarity_thresh);
 
@@ -196,10 +196,10 @@ TEST(RANDO, GenStr)
 	const std::string content = "0123456789"
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	size_t n = 9300;
-	std::string instr = get_string(n, content);
-	std::string instr2 = get_string(n, content);
+	std::string instr = retro::get_string(n, content);
+	std::string instr2 = retro::get_string(n, content);
 
-	vec_randomness(instr, instr2, Range<char>('0', 'z'), n, similarity_thresh);
+	vec_randomness(instr, instr2, retro::Range<char>('0', 'z'), n, similarity_thresh);
 
 	// randomness within a single string
 	std::unordered_map<char,uint> occurrences;
@@ -236,8 +236,8 @@ TEST(RANDO, GenStr)
 TEST(RANDO, GenChoice)
 {
 	const double similarity_thresh = 0.1;
-	std::vector<uint64_t> carr = choose(19, 6);
-	std::vector<uint64_t> carr2 = choose(19, 6);
+	std::vector<uint64_t> carr = retro::choose(19, 6);
+	std::vector<uint64_t> carr2 = retro::choose(19, 6);
 
 	// constraint
 	std::unordered_set<uint64_t> carr_set(carr.begin(), carr.end());
@@ -267,7 +267,7 @@ TEST(RANDO, GenChoice)
 	auto endit = carr.end();
 	for (uint i = 0; i < sample_size; ++i)
 	{
-		auto it = select(begit, endit);
+		auto it = retro::select(begit, endit);
 		size_t d = std::distance(begit, it);
 		occurrences[d]++;
 	}
@@ -293,10 +293,10 @@ TEST(RANDO, GenChoice)
 TEST(RANDO, GenTree)
 {
 	const uint32_t N = 147;
-	Graph<N> tree;
-	get_minspan_tree(tree);
-	Graph<N> tree2;
-	get_minspan_tree(tree2);
+	retro::Graph<N> tree;
+	retro::get_minspan_tree(tree);
+	retro::Graph<N> tree2;
+	retro::get_minspan_tree(tree2);
 
 	// constraint
 	// let's go through the tree, assertion:
@@ -334,10 +334,10 @@ TEST(RANDO, GenTree)
 TEST(RANDO, GenGraph)
 {
 	const uint32_t N = 137;
-	Graph<N> graph;
-	get_graph(graph);
-	Graph<N> graph2;
-	get_graph(graph2);
+	retro::Graph<N> graph;
+	retro::get_graph(graph);
+	retro::Graph<N> graph2;
+	retro::get_graph(graph2);
 
 	// randomness between graphs
 	uint32_t nand = 0;
@@ -359,10 +359,10 @@ TEST(RANDO, GenGraph)
 TEST(RANDO, GenCGraph)
 {
 	const uint32_t N = 123;
-	Graph<N> graph;
-	get_conn_graph(graph);
-	Graph<N> graph2;
-	get_conn_graph(graph2);
+	retro::Graph<N> graph;
+	retro::get_conn_graph(graph);
+	retro::Graph<N> graph2;
+	retro::get_conn_graph(graph2);
 
 	// constraint
 	// let's go through the graph, assertion:

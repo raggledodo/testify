@@ -4,15 +4,18 @@
 #include <queue>
 #include <sstream>
 
-#ifndef RAND_HPP
-#define RAND_HPP
+#ifndef RETRO_RAND_HPP
+#define RETRO_RAND_HPP
 
-using ENGINE = std::default_random_engine;
+namespace retro
+{
+
+using EngineT = std::default_random_engine;
 
 template <typename Iterator>
 using IterType = typename std::iterator_traits<Iterator>::value_type;
 
-ENGINE& get_engine (void);
+EngineT& get_engine (void);
 
 template <typename T>
 struct Range
@@ -40,7 +43,7 @@ struct ItHelper
 {
 	static void get_vec (Iterator begin, Iterator end, Range<T> range)
 	{
-		ENGINE& gen = get_engine();
+		EngineT& gen = get_engine();
 		std::uniform_int_distribution<T> dis(range.min_, range.max_);
 		std::generate(begin, end, [&]()
 		{
@@ -54,7 +57,7 @@ struct ItHelper<Iterator,double>
 {
 	static void get_vec (Iterator begin, Iterator end, Range<double> range)
 	{
-		ENGINE& gen = get_engine();
+		EngineT& gen = get_engine();
 		std::uniform_real_distribution<double> dis(range.min_, range.max_);
 		std::generate(begin, end, [&]()
 		{
@@ -68,7 +71,7 @@ struct ItHelper<Iterator,float>
 {
 	static void get_vec (Iterator begin, Iterator end, Range<float> range)
 	{
-		ENGINE& gen = get_engine();
+		EngineT& gen = get_engine();
 		std::uniform_real_distribution<float> dis(range.min_, range.max_);
 		std::generate(begin, end, [&]()
 		{
@@ -242,4 +245,6 @@ void get_conn_graph (Graph<NVERT>& out)
 	get_graph<NVERT>(out);
 }
 
-#endif /* RAND_HPP */
+}
+
+#endif // RETRO_RAND_HPP

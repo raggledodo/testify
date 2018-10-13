@@ -117,8 +117,8 @@ static MockService service;
 
 void RunServer (void)
 {
-	std::string servercert = read_keycert("certs/server.crt");
-	std::string serverkey = read_keycert("certs/server.key");
+	std::string servercert = dora::read_keycert("certs/server.crt");
+	std::string serverkey = dora::read_keycert("certs/server.key");
 
 	grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp;
 	pkcp.private_key = serverkey;
@@ -151,10 +151,10 @@ int main (int argc, char** argv)
 	std::unique_lock<std::mutex> lck(mtx);
 	server_started.wait_for(lck,std::chrono::seconds(1));
 
-	ClientConfig cfg;
+	dora::ClientConfig cfg;
 	size_t grab_ncases;
 	cfg.host = server_addr;
-	cfg.cert = read_keycert("certs/server.crt");
+	cfg.cert = dora::read_keycert("certs/server.crt");
 	antero::INIT(cfg);
 
 	::testing::InitGoogleTest(&argc, argv);
@@ -169,16 +169,16 @@ int main (int argc, char** argv)
 }
 
 
-class SAMPLE : public Testament {};
+class SAMPLE : public antero::Testament {};
 
 
 void EXPECT_DESCRIBED_EQ (testify::CaseData& expect, testify::CaseData& got)
 {
-	DTYPE dtype = expect.data_case();
+	dora::DtypeT dtype = expect.data_case();
 	ASSERT_EQ(dtype, got.data_case());
 	switch (dtype)
 	{
-		case DTYPE::kDdoubles:
+		case dora::DtypeT::kDdoubles:
 		{
 			const testify::Doubles& edbs = expect.ddoubles();
 			const testify::Doubles& gdbs = got.ddoubles();
@@ -187,7 +187,7 @@ void EXPECT_DESCRIBED_EQ (testify::CaseData& expect, testify::CaseData& got)
 			EXPECT_ARREQ(evec, gvec);
 		}
 		break;
-		case DTYPE::kDint64S:
+		case dora::DtypeT::kDint64S:
 		{
 			const testify::Int64s& eits = expect.dint64s();
 			const testify::Int64s& gits = got.dint64s();
@@ -196,7 +196,7 @@ void EXPECT_DESCRIBED_EQ (testify::CaseData& expect, testify::CaseData& got)
 			EXPECT_ARREQ(evec, gvec);
 		}
 		break;
-		case DTYPE::kDbytes:
+		case dora::DtypeT::kDbytes:
 		{
 			const testify::Bytes& eits = expect.dbytes();
 			const testify::Bytes& gits = got.dbytes();
@@ -235,43 +235,43 @@ TEST_F(SAMPLE, Sample1)
 {
 	std::string tname = "sample1";
 	auto expect = service.dmap_[tname].cases()[0];
-	// auto got = get(tname);
+	auto got = get(tname);
 
-	// EXPECT_GCASE_EQ(expect, got);
+	EXPECT_GCASE_EQ(expect, got);
 }
 
 
-// TEST_F(SAMPLE, Sample2)
-// {
-// 	std::string tname = "sample2";
-// 	auto expect = service.dmap_[tname].cases()[0];
-// 	auto got = get(tname);
+TEST_F(SAMPLE, Sample2)
+{
+	std::string tname = "sample2";
+	auto expect = service.dmap_[tname].cases()[0];
+	auto got = get(tname);
 
-// 	EXPECT_GCASE_EQ(expect, got);
-// }
-
-
-// TEST_F(SAMPLE, Sample3)
-// {
-// 	std::string tname = "sample3";
-// 	auto expect = service.dmap_[tname].cases()[0];
-// 	auto got = get(tname);
-
-// 	EXPECT_GCASE_EQ(expect, got);
-// }
+	EXPECT_GCASE_EQ(expect, got);
+}
 
 
-// TEST_F(SAMPLE, Sample4)
-// {
-// 	std::string tname = "sample4";
-// 	auto expect = service.dmap_[tname].cases()[0];
-// 	auto got = get(tname);
+TEST_F(SAMPLE, Sample3)
+{
+	std::string tname = "sample3";
+	auto expect = service.dmap_[tname].cases()[0];
+	auto got = get(tname);
 
-// 	EXPECT_GCASE_EQ(expect, got);
-// }
+	EXPECT_GCASE_EQ(expect, got);
+}
 
 
-// TEST_F(SAMPLE, Sample5)
-// {
-// 	EXPECT_THROW(get("sample5"), std::runtime_error);
-// }
+TEST_F(SAMPLE, Sample4)
+{
+	std::string tname = "sample4";
+	auto expect = service.dmap_[tname].cases()[0];
+	auto got = get(tname);
+
+	EXPECT_GCASE_EQ(expect, got);
+}
+
+
+TEST_F(SAMPLE, Sample5)
+{
+	EXPECT_THROW(get("sample5"), std::runtime_error);
+}

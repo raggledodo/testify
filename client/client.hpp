@@ -12,10 +12,13 @@
 #include "proto/testify.pb.h"
 #include "proto/testify.grpc.pb.h"
 
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#include "client/type.hpp"
 
-using DTYPE = testify::CaseData::DataCase;
+#ifndef DORA_CLIENT_HPP
+#define DORA_CLIENT_HPP
+
+namespace dora
+{
 
 struct ClientConfig
 {
@@ -254,4 +257,6 @@ private:
 	std::condition_variable stop_check_;
 };
 
-#endif /* CLIENT_HPP */
+}
+
+#endif // DORA_CLIENT_HPP

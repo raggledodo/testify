@@ -156,13 +156,13 @@ struct MockService final : public testify::Dora::Service
 };
 
 
-class JACK : public TestModel {};
+class JACK : public simple::TestModel {};
 
 
 void RunServer (void)
 {
-	std::string servercert = read_keycert("certs/server.crt");
-	std::string serverkey = read_keycert("certs/server.key");
+	std::string servercert = dora::read_keycert("certs/server.crt");
+	std::string serverkey = dora::read_keycert("certs/server.key");
 
 	grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp;
 	pkcp.private_key = serverkey;
@@ -191,7 +191,7 @@ void RunServer (void)
 int main (int argc, char** argv)
 {
 	size_t seed = std::time(nullptr);
-	get_engine().seed(seed);
+	retro::get_engine().seed(seed);
 
 	std::thread th(RunServer); // no recovery from bad server startup
 
@@ -214,11 +214,11 @@ int main (int argc, char** argv)
 
 TEST_F(JACK, Send)
 {
-	SESSION sess = get_session("JACK::Send");
+	simple::SESSION sess = get_session("JACK::Send");
 
-	Range<double> dbrange{-10.4, 45.2};
-	Range<int32_t> irange{-104, 452};
-	Range<int32_t> srange{-25, 55};
+	retro::Range<double> dbrange{-10.4, 45.2};
+	retro::Range<int32_t> irange{-104, 452};
+	retro::Range<int32_t> srange{-25, 55};
 	dbs = sess->get_double("dbs", 10, dbrange);
 	its = sess->get_int("its", 11, irange);
 	scalar = sess->get_scalar("scalar", srange);

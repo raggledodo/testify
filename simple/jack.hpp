@@ -5,19 +5,26 @@
 #include "retroc/generate.hpp"
 #include "anteroc/testcase.hpp"
 
+#ifndef SIMPLE_JACK_HPP
+#define SIMPLE_JACK_HPP
+
 using namespace std::experimental;
+
+namespace simple
+{
 
 struct iSession
 {
 	virtual ~iSession (void) = default;
 
 	virtual std::vector<double> get_double (std::string usage, size_t len,
-		Range<double> range = Range<double>()) = 0;
+		retro::Range<double> range = retro::Range<double>()) = 0;
 
 	virtual std::vector<int32_t> get_int (std::string usage, size_t len,
-		Range<int32_t> range = Range<int32_t>()) = 0;
+		retro::Range<int32_t> range = retro::Range<int32_t>()) = 0;
 
-	virtual int32_t get_scalar (std::string usage, Range<int32_t> range = Range<int32_t>()) = 0;
+	virtual int32_t get_scalar (std::string usage,
+		retro::Range<int32_t> range = retro::Range<int32_t>()) = 0;
 
 	virtual std::string get_string (std::string usage, size_t len) = 0;
 
@@ -42,7 +49,7 @@ struct iSession
 
 using SESSION = std::unique_ptr<iSession>;
 
-struct TestModel : public Testament
+struct TestModel : public antero::Testament
 {
 	static bool GENERATE_MODE;
 
@@ -63,12 +70,11 @@ protected:
 	SESSION active_;
 };
 
-namespace simple
-{
-
 void INIT (std::string server_addr, const char* certfile,
 	bool genmode = false, size_t nretries = 3);
 
 void SHUTDOWN (void);
 
 }
+
+#endif // SIMPLE_JACK_HPP

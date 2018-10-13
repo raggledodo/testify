@@ -43,13 +43,13 @@ EXPECT_TRUE(std::equal(arr1.begin(), arr1.end(), arr2.begin()))\
 // server thread info
 static const std::string server_addr = "localhost:50075";
 
-class JACK : public TestModel {};
+class JACK : public simple::TestModel {};
 
 
 int main (int argc, char** argv)
 {
 	size_t seed = std::time(nullptr);
-	get_engine().seed(seed);
+	retro::get_engine().seed(seed);
 
 	simple::INIT(server_addr, "certs/server.crt", false);
 
@@ -63,11 +63,11 @@ int main (int argc, char** argv)
 
 TEST_F(JACK, Send)
 {
-	SESSION sess = get_session("JACK::Send");
+	simple::SESSION sess = get_session("JACK::Send");
 
-	Range<double> dbrange{-10.4, 45.2};
-	Range<int32_t> irange{-104, 452};
-	Range<int32_t> srange{-25, 55};
+	retro::Range<double> dbrange{-10.4, 45.2};
+	retro::Range<int32_t> irange{-104, 452};
+	retro::Range<int32_t> srange{-25, 55};
 	std::vector<double> dbs = sess->get_double("dbs", 10, dbrange);
 	std::vector<int32_t> its = sess->get_int("its", 11, irange);
 	int32_t scalar = sess->get_scalar("scalar", srange);

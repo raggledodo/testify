@@ -1,9 +1,13 @@
+#include "client/type.hpp"
+
 #include "retroc/client.hpp"
 #include "retroc/rand.hpp"
-#include "retroc/type.hpp"
 
-#ifndef GEN_HPP
-#define GEN_HPP
+#ifndef RETRO_GEN_HPP
+#define RETRO_GEN_HPP
+
+namespace retro
+{
 
 struct GenIO
 {
@@ -14,7 +18,7 @@ struct GenIO
 	void get_vec (std::string usage, Iterator begin, Iterator end,
 		Range<IterType<Iterator>> range = Range<IterType<Iterator>>())
 	{
-		::get_vec(begin, end, range);
+		retro::get_vec(begin, end, range);
 		testify::CaseData input;
 		serialize(input, begin, end);
 		gcase_.mutable_inputs()->insert({usage, input});
@@ -24,7 +28,7 @@ struct GenIO
 	std::vector<T> get_vec (std::string usage, size_t len,
 		Range<T> range = Range<T>())
 	{
-		auto out = ::get_vec(len, range);
+		auto out = retro::get_vec(len, range);
 		testify::CaseData input;
 		serialize(input, out.begin(), out.end());
 		gcase_.mutable_inputs()->insert({usage, input});
@@ -35,7 +39,7 @@ struct GenIO
 	void get_vec (std::string usage, Iterator obegin, Iterator oend,
 		const Iterator ibegin, const Iterator iend)
 	{
-		::get_vec(obegin, oend, ibegin, iend);
+		retro::get_vec(obegin, oend, ibegin, iend);
 		testify::CaseData input;
 		serialize(input, obegin, oend);
 		gcase_.mutable_inputs()->insert({usage, input});
@@ -50,7 +54,7 @@ struct GenIO
 	template <typename Iterator>
 	Iterator select (std::string usage, Iterator first, Iterator last)
 	{
-		auto out = ::select(first, last);
+		auto out = retro::select(first, last);
 		testify::CaseData input;
 		size_t i = std::distance(first, out);
 		testify::Uint64s* arr = input.mutable_duint64s();
@@ -63,7 +67,7 @@ struct GenIO
 	template <uint32_t N>
 	size_t get_minspan_tree (std::string usage, Graph<N>& out)
 	{
-		::get_minspan_tree(out);
+		retro::get_minspan_tree(out);
 		testify::CaseData input;
 		testify::Tree* tree = input.mutable_dtree();
 		tree->set_root(0);
@@ -76,7 +80,7 @@ struct GenIO
 	template <uint32_t NVERT>
 	void get_graph (std::string usage, Graph<NVERT>& out)
 	{
-		::get_graph(out);
+		retro::get_graph(out);
 		testify::CaseData input;
 		testify::Graph* graph = input.mutable_dgraph();
 		serialize(*graph, out);
@@ -87,7 +91,7 @@ struct GenIO
 	template <uint32_t NVERT>
 	void get_conn_graph (std::string usage, Graph<NVERT>& out)
 	{
-		::get_conn_graph(out);
+		retro::get_conn_graph(out);
 		testify::CaseData input;
 		testify::Graph* graph = input.mutable_dgraph();
 		serialize(*graph, out);
@@ -132,51 +136,51 @@ private:
 	template <typename Iterator>
 	void serialize (testify::CaseData& out, Iterator begin, Iterator end)
 	{
-		DTYPE type = get_type<IterType<Iterator>>();
+		dora::DtypeT type = dora::get_type<IterType<Iterator>>();
 		switch (type)
 		{
-			case DTYPE::kDbytes:
+			case dora::DtypeT::kDbytes:
 			{
 				testify::Bytes* arr = out.mutable_dbytes();
 				arr->set_data(std::string(begin, end));
 			}
 			break;
-			case DTYPE::kDdoubles:
+			case dora::DtypeT::kDdoubles:
 			{
 				testify::Doubles* arr = out.mutable_ddoubles();
 				google::protobuf::RepeatedField<double> field(begin, end);
 				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case DTYPE::kDfloats:
+			case dora::DtypeT::kDfloats:
 			{
 				testify::Floats* arr = out.mutable_dfloats();
 				google::protobuf::RepeatedField<float> field(begin, end);
 				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case DTYPE::kDint32S:
+			case dora::DtypeT::kDint32S:
 			{
 				testify::Int32s* arr = out.mutable_dint32s();
 				google::protobuf::RepeatedField<int32_t> field(begin, end);
 				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case DTYPE::kDuint32S:
+			case dora::DtypeT::kDuint32S:
 			{
 				testify::Uint32s* arr = out.mutable_duint32s();
 				google::protobuf::RepeatedField<uint32_t> field(begin, end);
 				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case DTYPE::kDint64S:
+			case dora::DtypeT::kDint64S:
 			{
 				testify::Int64s* arr = out.mutable_dint64s();
 				google::protobuf::RepeatedField<int64_t> field(begin, end);
 				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case DTYPE::kDuint64S:
+			case dora::DtypeT::kDuint64S:
 			{
 				testify::Uint64s* arr = out.mutable_duint64s();
 				google::protobuf::RepeatedField<uint64_t> field(begin, end);
@@ -211,4 +215,6 @@ private:
 	std::string testname_;
 };
 
-#endif /* GEN_HPP */
+}
+
+#endif // RETRO_GEN_HPP

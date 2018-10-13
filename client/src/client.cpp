@@ -1,6 +1,9 @@
 #include "client/client.hpp"
 
-#ifdef CLIENT_HPP
+#ifdef DORA_CLIENT_HPP
+
+namespace dora
+{
 
 bool is_reachable (grpc::Status status)
 {
@@ -28,6 +31,8 @@ std::string read_keycert (const char* filename)
         fs.close();
     }
     return ss.str();
+}
+
 }
 
 #endif

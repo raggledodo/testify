@@ -5,7 +5,7 @@
 namespace retro
 {
 
-static std::unique_ptr<DoraClient> client = nullptr;
+static std::unique_ptr<dora::DoraClient> client = nullptr;
 
 // cache testname and attempt to send case to server
 void cache (std::string testname, testify::GeneratedCase& gcase)
@@ -13,9 +13,9 @@ void cache (std::string testname, testify::GeneratedCase& gcase)
 	// todo: implement
 }
 
-void INIT (ClientConfig configs)
+void INIT (dora::ClientConfig configs)
 {
-	client = std::make_unique<DoraClient>(configs);
+	client = std::make_unique<dora::DoraClient>(configs);
 }
 
 void SHUTDOWN (void)
