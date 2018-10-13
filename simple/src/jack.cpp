@@ -5,75 +5,66 @@
 
 bool TestModel::GENERATE_MODE = false;
 
-static std::vector<double> unpack_double (const google::protobuf::Any& data, testify::DTYPE type)
+static std::vector<double> unpack_double (const testify::CaseData& gcase)
 {
 	std::vector<double> out;
-	switch (type)
+	if (gcase.has_ddoubles())
 	{
-		case testify::DOUBLES:
-		{
-			testify::Doubles arr;
-			data.UnpackTo(&arr);
-			auto temp = arr.data();
-			out = std::vector<double>(temp.begin(), temp.end());
-		}
-		break;
-		case testify::FLOATS:
-		{
-			testify::Floats arr;
-			data.UnpackTo(&arr);
-			auto temp = arr.data();
-			out = std::vector<double>(temp.begin(), temp.end());
-		}
-		default:
-			throw std::runtime_error("incorrect (non-decimal) type");
+		const testify::Doubles& arr = gcase.ddoubles();
+		auto temp = arr.data();
+		out = std::vector<double>(temp.begin(), temp.end());
+	}
+	else if (gcase.has_dfloats())
+	{
+		const testify::Floats& arr = gcase.dfloats();
+		auto temp = arr.data();
+		out = std::vector<double>(temp.begin(), temp.end());
+	}
+	else
+	{
+		throw std::runtime_error("incorrect (non-decimal) type");
 	}
 	return out;
 }
 
 template <typename T>
-static std::vector<T> unpack_int (const google::protobuf::Any& data, testify::DTYPE type)
+static std::vector<T> unpack_int (const testify::CaseData& gcase)
 {
 	static_assert(std::is_integral<T>::value, "Integral required.");
 	std::vector<T> out;
-	switch (type)
+	switch (gcase.data_case())
 	{
-		case testify::INT64S:
+		case testify::CaseData::kDint64S:
 		{
-			testify::Int64s arr;
-			data.UnpackTo(&arr);
+			const testify::Int64s& arr = gcase.dint64s();
 			auto temp = arr.data();
 			out = std::vector<T>(temp.begin(), temp.end());
 		}
 		break;
-		case testify::UINT64S:
+		case testify::CaseData::kDuint64S:
 		{
-			testify::Uint64s arr;
-			data.UnpackTo(&arr);
+			const testify::Uint64s& arr = gcase.duint64s();
 			auto temp = arr.data();
 			out = std::vector<T>(temp.begin(), temp.end());
 		}
 		break;
-		case testify::INT32S:
+		case testify::CaseData::kDint32S:
 		{
-			testify::Int32s arr;
-			data.UnpackTo(&arr);
+			const testify::Int32s& arr = gcase.dint32s();
 			auto temp = arr.data();
 			out = std::vector<T>(temp.begin(), temp.end());
 		}
 		break;
-		case testify::UINT32S:
+		case testify::CaseData::kDuint32S:
 		{
-			testify::Uint32s arr;
-			data.UnpackTo(&arr);
+			const testify::Uint32s& arr = gcase.duint32s();
 			auto temp = arr.data();
 			out = std::vector<T>(temp.begin(), temp.end());
 		}
 		break;
-		case testify::BYTES:
+		case testify::CaseData::kDbytes:
 		{
-			testify::Bytes arr;
-			data.UnpackTo(&arr);
+			const testify::Bytes& arr = gcase.dbytes();
 			auto temp = arr.data();
 			out = std::vector<T>(temp.begin(), temp.end());
 		}
@@ -84,22 +75,18 @@ static std::vector<T> unpack_int (const google::protobuf::Any& data, testify::DT
 	return out;
 }
 
-static std::string unpack_string (const google::protobuf::Any& data, testify::DTYPE type)
+static std::string unpack_string (const testify::CaseData& gcase)
 {
 	std::string out;
-	switch (type)
+	if (gcase.has_dbytes())
 	{
-		case testify::BYTES:
-		{
-			testify::Bytes arr;
-			data.UnpackTo(&arr);
-			auto temp = arr.data();
-			out = std::string(temp.begin(), temp.end());
-		}
-		break;
-		default:
-			throw std::runtime_error(
-				"incorrect (non-string) type");
+		const testify::Bytes& arr = gcase.dbytes();
+		auto temp = arr.data();
+		out = std::string(temp.begin(), temp.end());
+	}
+	else
+	{
+		throw std::runtime_error("incorrect (non-string) type");
 	}
 	return out;
 }
@@ -117,7 +104,7 @@ struct ModelledSession : public iSession
 		auto it = outputs.find(usage);
 		if (outputs.end() != it)
 		{
-			out = unpack_double(it->second.data(), it->second.dtype());
+			out = unpack_double(it->second);
 		}
 		return out;
 	}
@@ -129,7 +116,7 @@ struct ModelledSession : public iSession
 		auto it = outputs.find(usage);
 		if (outputs.end() != it)
 		{
-			out = unpack_int<int32_t>(it->second.data(), it->second.dtype());
+			out = unpack_int<int32_t>(it->second);
 		}
 		return out;
 	}
@@ -141,7 +128,7 @@ struct ModelledSession : public iSession
 		auto it = outputs.find(usage);
 		if (outputs.end() != it)
 		{
-			out = unpack_string(it->second.data(), it->second.dtype());
+			out = unpack_string(it->second);
 		}
 		return out;
 	}
@@ -232,7 +219,7 @@ struct OutSession final : public ModelledSession
 			{
 				throw std::runtime_error(usage + " not found");
 			}
-			std::vector<double> out = unpack_double(it->second.data(), it->second.dtype());
+			std::vector<double> out = unpack_double(it->second);
 			if (out.size() != len)
 			{
 				throw std::runtime_error("extracted int32_t vec invalid length");
@@ -263,7 +250,7 @@ struct OutSession final : public ModelledSession
 			{
 				throw std::runtime_error(usage + " not found");
 			}
-			std::vector<int32_t> out = unpack_int<int32_t>(it->second.data(), it->second.dtype());
+			std::vector<int32_t> out = unpack_int<int32_t>(it->second);
 			if (out.size() != len)
 			{
 				throw std::runtime_error("extracted int32_t vec invalid length");
@@ -298,7 +285,7 @@ struct OutSession final : public ModelledSession
 			{
 				throw std::runtime_error(usage + " not found");
 			}
-			std::string out = unpack_string(it->second.data(), it->second.dtype());
+			std::string out = unpack_string(it->second);
 			if (out.size() != len)
 			{
 				throw std::runtime_error("extracted int32_t vec invalid length");
@@ -321,7 +308,7 @@ struct OutSession final : public ModelledSession
 			{
 				throw std::runtime_error(usage + " not found");
 			}
-			std::vector<uint64_t> out = unpack_int<uint64_t>(it->second.data(), it->second.dtype());
+			std::vector<uint64_t> out = unpack_int<uint64_t>(it->second);
 			if (out.size() != k)
 			{
 				throw std::runtime_error("extracted uint64_t vec invalid length");
@@ -366,28 +353,19 @@ SESSION TestModel::get_session (std::string testname)
 namespace simple
 {
 
-void INIT (std::string server_addr, bool genmode, size_t nretries)
+void INIT (std::string server_addr, const char* certfile, bool genmode, size_t nretries)
 {
 	size_t seed = std::time(nullptr);
 	get_engine().seed(seed);
 
 	TestModel::GENERATE_MODE = genmode;
 	ClientConfig config;
+	config.cert = read_keycert(certfile);
 	config.host = server_addr;
 	config.nretry = nretries;
 	try
 	{
-		size_t grab_ncases;
-		char* nrepeats = getenv("GTEST_REPEAT");
-		if (nrepeats == nullptr)
-		{
-			grab_ncases = 100;
-		}
-		else
-		{
-			grab_ncases = atoi(nrepeats);
-		}
-		antero::INIT(grab_ncases, config);
+		antero::INIT(config);
 	}
 	catch (...)
 	{

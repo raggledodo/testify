@@ -8,7 +8,7 @@ import time
 import numpy as np
 
 import grpc
-from google.protobuf.empty_pb2 import Empty
+from google.protobuf import empty_pb2
 
 import proto.testify_pb2 as testify
 import proto.testify_pb2_grpc as testify_grpc
@@ -16,7 +16,8 @@ import proto.testify_pb2_grpc as testify_grpc
 from retrop.generate import GenIO
 import retrop.client as client
 
-SERVER_PORT = 50055
+_SERVER_PORT = 50055
+_CERTIFICATE = open('certs/server.crt').read()
 _SERVER = None
 
 latest_name = ""
@@ -27,8 +28,8 @@ class MockService(testify_grpc.DoraServicer):
         global latest_name
         global latest_case
         latest_name = request.name
-        latest_case = request.results
-        return Empty()
+        latest_case = request.payload
+        return empty_pb2.Empty()
 
     def RemoveTestcase(self, request, context):
         pass
@@ -36,14 +37,19 @@ class MockService(testify_grpc.DoraServicer):
     def ListTestcases(self, request, context):
         pass
 
-    def GetTestcase(self, request, context):
-        pass
+    def CheckHealth(self, request, context):
+        out = testify.HealthCheckResponse()
+        out.status = testify.HealthCheckResponse.SERVING
+        return out
 
 def serve():
     global _SERVER
     _SERVER = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    private_key = open('certs/server.key').read()
+    server_credentials = grpc.ssl_server_credentials(((private_key, _CERTIFICATE),))
+
     testify_grpc.add_DoraServicer_to_server(MockService(), _SERVER)
-    _SERVER.add_insecure_port('[::]:' + str(SERVER_PORT))
+    _SERVER.add_secure_port('localhost:' + str(_SERVER_PORT), server_credentials)
     _SERVER.start()
 
 class ClientTest(unittest.TestCase):
@@ -101,21 +107,18 @@ class ClientTest(unittest.TestCase):
         self.assertEqual(1, len(outputs))
 
         self.assertTrue("int" in inputs)
-        self.assertEqual(testify.INT64S, inputs["int"].dtype)
-        i64s = testify.Int64s()
-        inputs["int"].data.Unpack(i64s)
+        i64s = inputs["int"].dint64s
+        self.assertIsNotNone(i64s)
         self.assertArrEqual(iarr, i64s.data)
 
         self.assertTrue("double" in inputs)
-        self.assertEqual(testify.DOUBLES, inputs["double"].dtype)
-        ds = testify.Doubles()
-        inputs["double"].data.Unpack(ds)
+        ds = inputs["double"].ddoubles
+        self.assertIsNotNone(ds)
         self.assertArrEqual(darr, ds.data)
 
         self.assertTrue("stdout" in outputs)
-        self.assertEqual(testify.INT64S, outputs["stdout"].dtype)
-        outr = testify.Int64s()
-        outputs["stdout"].data.Unpack(outr)
+        outr = outputs["stdout"].dint64s
+        self.assertIsNotNone(outr)
         self.assertArrEqual(out, outr.data)
 
     def test_str(self):
@@ -135,15 +138,13 @@ class ClientTest(unittest.TestCase):
         self.assertEqual(1, len(outputs))
 
         self.assertTrue("strusage" in inputs)
-        self.assertEqual(testify.BYTES, inputs["strusage"].dtype)
-        bs = testify.Bytes()
-        inputs["strusage"].data.Unpack(bs)
+        bs = inputs["strusage"].dbytes
+        self.assertIsNotNone(bs)
         self.assertEqual(s, bs.data.decode())
 
         self.assertTrue("stdout" in outputs)
-        self.assertEqual(testify.INT64S, outputs["stdout"].dtype)
-        outr = testify.Int64s()
-        outputs["stdout"].data.Unpack(outr)
+        outr = outputs["stdout"].dint64s
+        self.assertIsNotNone(outr)
         self.assertArrEqual(out, outr.data)
 
     def test_tree(self):
@@ -162,16 +163,14 @@ class ClientTest(unittest.TestCase):
         self.assertEqual(1, len(outputs))
 
         self.assertTrue("treeusage" in inputs)
-        self.assertEqual(testify.NTREE, inputs["treeusage"].dtype)
-        ts = testify.Tree()
-        inputs["treeusage"].data.Unpack(ts)
+        ts = inputs["treeusage"].dtree
+        self.assertIsNotNone(ts)
         self.assertEqual(root, ts.root)
         self.assertGraphEqual(tr, ts.graph)
 
         self.assertTrue("stdout" in outputs)
-        self.assertEqual(testify.NTREE, outputs["stdout"].dtype)
-        outt = testify.Tree()
-        outputs["stdout"].data.Unpack(outt)
+        outt = outputs["stdout"].dtree
+        self.assertIsNotNone(outt)
         self.assertEqual(root, outt.root)
         self.assertGraphEqual(tr, outt.graph)
 
@@ -191,15 +190,13 @@ class ClientTest(unittest.TestCase):
         self.assertEqual(1, len(outputs))
 
         self.assertTrue("graphusage" in inputs)
-        self.assertEqual(testify.GRAPH, inputs["graphusage"].dtype)
-        gs = testify.Graph()
-        inputs["graphusage"].data.Unpack(gs)
+        gs = inputs["graphusage"].dgraph
+        self.assertIsNotNone(gs)
         self.assertGraphEqual(gr, gs)
 
         self.assertTrue("stdout" in outputs)
-        self.assertEqual(testify.GRAPH, outputs["stdout"].dtype)
-        outg = testify.Graph()
-        outputs["stdout"].data.Unpack(outg)
+        outg = outputs["stdout"].dgraph
+        self.assertIsNotNone(outg)
         self.assertGraphEqual(gr, outg)
 
     def test_cgraph(self):
@@ -218,20 +215,18 @@ class ClientTest(unittest.TestCase):
         self.assertEqual(1, len(outputs))
 
         self.assertTrue("cgraphusage" in inputs)
-        self.assertEqual(testify.GRAPH, inputs["cgraphusage"].dtype)
-        gs = testify.Graph()
-        inputs["cgraphusage"].data.Unpack(gs)
+        gs = inputs["cgraphusage"].dgraph
+        self.assertIsNotNone(gs)
         self.assertGraphEqual(cg, gs)
 
         self.assertTrue("stdout" in outputs)
-        self.assertEqual(testify.GRAPH, outputs["stdout"].dtype)
-        outg = testify.Graph()
-        outputs["stdout"].data.Unpack(outg)
+        outg = outputs["stdout"].dgraph
+        self.assertIsNotNone(outg)
         self.assertGraphEqual(cg, outg)
 
 if __name__ == "__main__":
     np.random.seed(int(time.time()))
     serve()
     assert(_SERVER is not None)
-    client.init("0.0.0.0:" + str(SERVER_PORT))
+    client.init("localhost:" + str(_SERVER_PORT), _CERTIFICATE)
     unittest.main()

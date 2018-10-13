@@ -41,7 +41,7 @@ EXPECT_TRUE(std::equal(arr1.begin(), arr1.end(), arr2.begin()))\
 	<< to_str(arr2.begin(), arr2.end()) << " are not equal"
 
 // server thread info
-static const std::string server_addr = "0.0.0.0:50075";
+static const std::string server_addr = "localhost:50075";
 static std::unique_ptr<grpc::Server> server;
 std::condition_variable server_started;
 
@@ -66,58 +66,39 @@ static std::string strs = "1o29@34%sslw";
 struct MockService final : public testify::Dora::Service
 {
 	grpc::Status ListTestcases (grpc::ServerContext*,
-		const google::protobuf::Empty*,
-		grpc::ServerWriter<testify::TransferName>* writer) override
+		const testify::ListRequest*, testify::ListResponse* res) override
 	{
-		testify::TransferName name;
-		name.set_name("JACK::Send");
-		writer->Write(name);
-		return grpc::Status::OK;
-	}
+		testify::GeneratedTest test;
+		testify::GeneratedCase* out = test.add_cases();
+		auto& outputs = *out->mutable_outputs();
+		testify::CaseData dcase;
+		testify::CaseData icase;
+		testify::CaseData strcase;
+		testify::Doubles* dd = dcase.mutable_ddoubles();
+		google::protobuf::RepeatedField<double> pb_dubs(dubs.begin(), dubs.end());
+		dd->mutable_data()->Swap(&pb_dubs);
+		testify::Int32s* di = icase.mutable_dint32s();
+		google::protobuf::RepeatedField<int> pb_lngs(lngs.begin(), lngs.end());
+		di->mutable_data()->Swap(&pb_lngs);
+		testify::Bytes* dstr = strcase.mutable_dbytes();
+		dstr->set_data(strs);
 
-	grpc::Status GetTestcase (grpc::ServerContext*,
-		const testify::TransferName* name,
-		grpc::ServerWriter<testify::GeneratedCase>* writer) override
-	{
-		std::string key = name->name();
-		if (0 == key.compare("JACK::Send"))
-		{
-			testify::GeneratedCase out;
-			auto& outputs = *out.mutable_outputs();
-			testify::CaseData dcase;
-			testify::CaseData icase;
-			testify::CaseData strcase;
-			testify::Doubles dd;
-			google::protobuf::RepeatedField<double> pb_dubs(dubs.begin(), dubs.end());
-			dd.mutable_data()->Swap(&pb_dubs);
-			testify::Int32s di;
-			google::protobuf::RepeatedField<int> pb_lngs(lngs.begin(), lngs.end());
-			di.mutable_data()->Swap(&pb_lngs);
-			testify::Bytes dstr;
-			dstr.set_data(strs);
+		outputs.insert({"expect_dbs", dcase});
+		outputs.insert({"expect_its", icase});
+		outputs.insert({"expect_str", strcase});
 
-			dcase.set_dtype(testify::DOUBLES);
-			dcase.mutable_data()->PackFrom(dd);
-			icase.set_dtype(testify::INT32S);
-			icase.mutable_data()->PackFrom(di);
-			strcase.set_dtype(testify::BYTES);
-			strcase.mutable_data()->PackFrom(dstr);
-
-			outputs.insert({"expect_dbs", dcase});
-			outputs.insert({"expect_its", icase});
-			outputs.insert({"expect_str", strcase});
-			writer->Write(out);
-		}
+		auto testmap = res->mutable_tests();
+		testmap->insert({"JACK::Send", test});
 		return grpc::Status::OK;
 	}
 
 	grpc::Status AddTestcase (grpc::ServerContext*,
-		const testify::TransferCase* tcase, google::protobuf::Empty*) override
+		const testify::AddRequest* tcase, google::protobuf::Empty*) override
 	{
 		std::string key = tcase->name();
 		assert(0 == key.compare("JACK::Send"));
 
-		testify::GeneratedCase gcase = tcase->results();
+		testify::GeneratedCase gcase = tcase->payload();
 		auto& inputs = *gcase.mutable_inputs();
 		auto& outputs = *gcase.mutable_outputs();
 
@@ -126,19 +107,15 @@ struct MockService final : public testify::Dora::Service
 		auto scalardata = inputs["scalar"];
 		auto strdata = inputs["str"];
 
-		assert(dbdata.dtype() == testify::DOUBLES);
-		assert(itsdata.dtype() == testify::INT32S);
-		assert(scalardata.dtype() == testify::INT32S);
-		assert(strdata.dtype() == testify::BYTES);
+		assert(dbdata.has_ddoubles());
+		assert(itsdata.has_dint32s());
+		assert(scalardata.has_dint32s());
+		assert(strdata.has_dbytes());
 
-		testify::Doubles got_dbs;
-		testify::Int32s got_its;
-		testify::Int32s got_sclr;
-		testify::Bytes got_strs;
-		dbdata.mutable_data()->UnpackTo(&got_dbs);
-		itsdata.mutable_data()->UnpackTo(&got_its);
-		scalardata.mutable_data()->UnpackTo(&got_sclr);
-		strdata.mutable_data()->UnpackTo(&got_strs);
+		testify::Doubles got_dbs = dbdata.ddoubles();
+		testify::Int32s got_its = itsdata.dint32s();
+		testify::Int32s got_sclr = scalardata.dint32s();
+		testify::Bytes got_strs = strdata.dbytes();
 
 		assert(std::equal(dbs.begin(), dbs.end(), got_dbs.data().begin()));
 		assert(std::equal(its.begin(), its.end(), got_its.data().begin()));
@@ -149,16 +126,13 @@ struct MockService final : public testify::Dora::Service
 		auto entry_lngdata = outputs["entry_int32_t"];
 		auto entry_strdata = outputs["entry_string"];
 
-		assert(entry_dbdata.dtype() == testify::DOUBLES);
-		assert(entry_lngdata.dtype() == testify::INT32S);
-		assert(entry_strdata.dtype() == testify::BYTES);
+		assert(entry_dbdata.has_ddoubles());
+		assert(entry_lngdata.has_dint32s());
+		assert(entry_strdata.has_dbytes());
 
-		testify::Doubles got_entrydbs;
-		testify::Int32s got_entryits;
-		testify::Bytes got_entrystrs;
-		entry_dbdata.mutable_data()->UnpackTo(&got_entrydbs);
-		entry_lngdata.mutable_data()->UnpackTo(&got_entryits);
-		entry_strdata.mutable_data()->UnpackTo(&got_entrystrs);
+		testify::Doubles got_entrydbs = entry_dbdata.ddoubles();
+		testify::Int32s got_entryits = entry_lngdata.dint32s();
+		testify::Bytes got_entrystrs = entry_strdata.dbytes();
 
 		assert(std::equal(global_exdbs.begin(), global_exdbs.end(), got_entrydbs.data().begin()));
 		assert(std::equal(global_exlng.begin(), global_exlng.end(), got_entryits.data().begin()));
@@ -168,7 +142,7 @@ struct MockService final : public testify::Dora::Service
 	}
 
 	grpc::Status RemoveTestcase (grpc::ServerContext*,
-		const testify::TransferName*, google::protobuf::Empty*) override
+		const testify::RemoveRequest*, google::protobuf::Empty*) override
 	{
 		return grpc::Status::OK;
 	}
@@ -187,9 +161,20 @@ class JACK : public TestModel {};
 
 void RunServer (void)
 {
+	std::string servercert = read_keycert("certs/server.crt");
+	std::string serverkey = read_keycert("certs/server.key");
+
+	grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp;
+	pkcp.private_key = serverkey;
+	pkcp.cert_chain = servercert;
+
+	grpc::SslServerCredentialsOptions ssl_opts;
+	ssl_opts.pem_key_cert_pairs.push_back(pkcp);
+	auto creds = grpc::SslServerCredentials(ssl_opts);
+
 	MockService service;
 	grpc::ServerBuilder builder;
-	builder.AddListeningPort(server_addr, grpc::InsecureServerCredentials());
+	builder.AddListeningPort(server_addr, creds);
 	builder.RegisterService(&service);
 
 	server = builder.BuildAndStart();
@@ -213,7 +198,7 @@ int main (int argc, char** argv)
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
 	server_started.wait_for(lck, std::chrono::seconds(1));
-	simple::INIT(server_addr, true);
+	simple::INIT(server_addr, "certs/server.crt", true);
 
 	::testing::InitGoogleTest(&argc, argv);
 	int ret = RUN_ALL_TESTS();

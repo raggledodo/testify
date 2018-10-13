@@ -14,7 +14,7 @@ filegroup(
 py_library(
     name = "retrop",
     srcs = glob(["*.py"], exclude = ["test_client.py", "test_rand.py"]),
-    deps = ["//proto:py_proto"],
+    deps = ["@com_github_raggledodo_dora//proto:py_proto"],
 )
 
 ######### TEST #########
@@ -24,6 +24,7 @@ py_test(
     size = "enormous",
     srcs = ["test_client.py"],
     deps = ["//retrop:retrop"],
+    data = ["//:credentials"],
 )
 
 py_test(

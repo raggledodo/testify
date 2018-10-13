@@ -1,5 +1,9 @@
 licenses(["notice"])
 
+package(
+    default_visibility = ["//visibility:public"],
+)
+
 # local sources
 filegroup(
     name = "srcs",
@@ -9,5 +13,12 @@ filegroup(
         "//retroc:srcs",
         "//retrop:srcs",
     ],
-    visibility = ["//visibility:public"]
+)
+
+filegroup(
+    name = "credentials",
+    srcs = [
+        "certs/server.key",
+        "certs/server.crt",
+    ],
 )

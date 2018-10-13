@@ -5,13 +5,11 @@
 namespace antero
 {
 
-static size_t grab_ncases = 30;
 static std::unique_ptr<DoraClient> client = nullptr;
 
-void INIT (size_t ncases, ClientConfig configs)
+void INIT (ClientConfig configs)
 {
 	client = std::make_unique<DoraClient>(configs);
-	grab_ncases = ncases;
 }
 
 void SHUTDOWN (void)
@@ -20,7 +18,7 @@ void SHUTDOWN (void)
 	google::protobuf::ShutdownProtobufLibrary();
 }
 
-optional<std::vector<testify::GeneratedCase>> get_cases (std::string tname)
+bool get_cases (std::vector<testify::GeneratedCase>& out, std::string tname)
 {
 	if (nullptr == client)
 	{
@@ -34,12 +32,14 @@ optional<std::vector<testify::GeneratedCase>> get_cases (std::string tname)
 		found = names.find(tname) != names.end();
 	}
 
-	optional<std::vector<testify::GeneratedCase>> out;
 	if (found)
 	{
-		out = client->get_testcase(grab_ncases, tname);
+		testify::GeneratedTest test;
+		client->get_testcase(test, tname);
+		auto fields = test.cases();
+		out = std::vector<testify::GeneratedCase>(fields.begin(), fields.end());
 	}
-	return out;
+	return found;
 }
 
 }

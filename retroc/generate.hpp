@@ -5,11 +5,6 @@
 #ifndef GEN_HPP
 #define GEN_HPP
 
-#define SET_DATA(TYPE)\
-google::protobuf::RepeatedField<TYPE> field(begin, end);\
-arr.mutable_data()->Swap(&field);\
-out->PackFrom(arr);
-
 struct GenIO
 {
 	GenIO (std::string testname) :
@@ -21,7 +16,7 @@ struct GenIO
 	{
 		::get_vec(begin, end, range);
 		testify::CaseData input;
-		input.set_dtype(serialize(input.mutable_data(), begin, end));
+		serialize(input, begin, end);
 		gcase_.mutable_inputs()->insert({usage, input});
 	}
 
@@ -31,8 +26,7 @@ struct GenIO
 	{
 		auto out = ::get_vec(len, range);
 		testify::CaseData input;
-		input.set_dtype(serialize(input.mutable_data(),
-			out.begin(), out.end()));
+		serialize(input, out.begin(), out.end());
 		gcase_.mutable_inputs()->insert({usage, input});
 		return out;
 	}
@@ -43,7 +37,7 @@ struct GenIO
 	{
 		::get_vec(obegin, oend, ibegin, iend);
 		testify::CaseData input;
-		input.set_dtype(serialize(input.mutable_data(), obegin, oend));
+		serialize(input, obegin, oend);
 		gcase_.mutable_inputs()->insert({usage, input});
 	}
 
@@ -59,10 +53,8 @@ struct GenIO
 		auto out = ::select(first, last);
 		testify::CaseData input;
 		size_t i = std::distance(first, out);
-		testify::Uint64s arr;
-		arr.add_data(i);
-		input.mutable_data()->PackFrom(arr);
-		input.set_dtype(testify::UINT64S);
+		testify::Uint64s* arr = input.mutable_duint64s();
+		arr->add_data(i);
 		gcase_.mutable_inputs()->insert({usage, input});
 		return out;
 	}
@@ -73,11 +65,9 @@ struct GenIO
 	{
 		::get_minspan_tree(out);
 		testify::CaseData input;
-		testify::Tree tree;
-		tree.set_root(0);
-		serialize(*(tree.mutable_graph()), out);
-		input.mutable_data()->PackFrom(tree);
-		input.set_dtype(testify::NTREE);
+		testify::Tree* tree = input.mutable_dtree();
+		tree->set_root(0);
+		serialize(*(tree->mutable_graph()), out);
 		gcase_.mutable_inputs()->insert({usage, input});
 		return 0;
 	}
@@ -88,10 +78,8 @@ struct GenIO
 	{
 		::get_graph(out);
 		testify::CaseData input;
-		testify::Graph graph;
-		serialize(graph, out);
-		input.mutable_data()->PackFrom(graph);
-		input.set_dtype(testify::GRAPH);
+		testify::Graph* graph = input.mutable_dgraph();
+		serialize(*graph, out);
 		gcase_.mutable_inputs()->insert({usage, input});
 	}
 
@@ -101,10 +89,8 @@ struct GenIO
 	{
 		::get_conn_graph(out);
 		testify::CaseData input;
-		testify::Graph graph;
-		serialize(graph, out);
-		input.mutable_data()->PackFrom(graph);
-		input.set_dtype(testify::GRAPH);
+		testify::Graph* graph = input.mutable_dgraph();
+		serialize(*graph, out);
 		gcase_.mutable_inputs()->insert({usage, input});
 	}
 
@@ -112,7 +98,7 @@ struct GenIO
 	void set_output (std::string usage, Iterator begin, Iterator end)
 	{
 		testify::CaseData output;
-		output.set_dtype(serialize(output.mutable_data(), begin, end));
+		serialize(output, begin, end);
 		gcase_.mutable_outputs()->insert({usage, output});
 	}
 
@@ -120,11 +106,9 @@ struct GenIO
 	void set_outtree (std::string usage, size_t root, Graph<N>& graph)
 	{
 		testify::CaseData output;
-		testify::Tree tree;
-		tree.set_root(root);
-		serialize(*(tree.mutable_graph()), graph);
-		output.mutable_data()->PackFrom(tree);
-		output.set_dtype(testify::NTREE);
+		testify::Tree* tree = output.mutable_dtree();
+		tree->set_root(root);
+		serialize(*(tree->mutable_graph()), graph);
 		gcase_.mutable_outputs()->insert({usage, output});
 	}
 
@@ -132,10 +116,8 @@ struct GenIO
 	void set_outgraph (std::string usage, Graph<NVERT>& graph)
 	{
 		testify::CaseData output;
-		testify::Graph g;
-		serialize(g, graph);
-		output.mutable_data()->PackFrom(g);
-		output.set_dtype(testify::GRAPH);
+		testify::Graph* g = output.mutable_dgraph();
+		serialize(*g, graph);
 		gcase_.mutable_outputs()->insert({usage, output});
 	}
 
@@ -148,60 +130,62 @@ struct GenIO
 
 private:
 	template <typename Iterator>
-	testify::DTYPE serialize (google::protobuf::Any* out,
-		Iterator begin, Iterator end)
+	void serialize (testify::CaseData& out, Iterator begin, Iterator end)
 	{
-		assert(nullptr != out);
-		testify::DTYPE type = get_type<IterType<Iterator>>();
+		DTYPE type = get_type<IterType<Iterator>>();
 		switch (type)
 		{
-			case testify::BYTES:
+			case DTYPE::kDbytes:
 			{
-				testify::Bytes arr;
-				arr.set_data(std::string(begin, end));\
-				out->PackFrom(arr);
+				testify::Bytes* arr = out.mutable_dbytes();
+				arr->set_data(std::string(begin, end));
 			}
 			break;
-			case testify::DOUBLES:
+			case DTYPE::kDdoubles:
 			{
-				testify::Doubles arr;
-				SET_DATA(double)
+				testify::Doubles* arr = out.mutable_ddoubles();
+				google::protobuf::RepeatedField<double> field(begin, end);
+				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case testify::FLOATS:
+			case DTYPE::kDfloats:
 			{
-				testify::Floats arr;
-				SET_DATA(float)
+				testify::Floats* arr = out.mutable_dfloats();
+				google::protobuf::RepeatedField<float> field(begin, end);
+				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case testify::INT32S:
+			case DTYPE::kDint32S:
 			{
-				testify::Int32s arr;
-				SET_DATA(int32_t)
+				testify::Int32s* arr = out.mutable_dint32s();
+				google::protobuf::RepeatedField<int32_t> field(begin, end);
+				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case testify::UINT32S:
+			case DTYPE::kDuint32S:
 			{
-				testify::Uint32s arr;
-				SET_DATA(uint32_t)
+				testify::Uint32s* arr = out.mutable_duint32s();
+				google::protobuf::RepeatedField<uint32_t> field(begin, end);
+				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case testify::INT64S:
+			case DTYPE::kDint64S:
 			{
-				testify::Int64s arr;
-				SET_DATA(int64_t)
+				testify::Int64s* arr = out.mutable_dint64s();
+				google::protobuf::RepeatedField<int64_t> field(begin, end);
+				arr->mutable_data()->Swap(&field);
 			}
 			break;
-			case testify::UINT64S:
+			case DTYPE::kDuint64S:
 			{
-				testify::Uint64s arr;
-				SET_DATA(uint64_t)
+				testify::Uint64s* arr = out.mutable_duint64s();
+				google::protobuf::RepeatedField<uint64_t> field(begin, end);
+				arr->mutable_data()->Swap(&field);
 			}
 			break;
 			default:
-				throw std::runtime_error("serializing bad type");
+				throw std::runtime_error("serializing non-vector type");
 		}
-		return type;
 	}
 
 	template <uint32_t NVERT>
@@ -226,7 +210,5 @@ private:
 
 	std::string testname_;
 };
-
-#undef SET_DATA
 
 #endif /* GEN_HPP */

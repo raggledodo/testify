@@ -40,5 +40,8 @@ cc_test(
     ],
     linkstatic = 1,
     copts = ["-std=c++14"],
-    data = ["//sample:sample"],
+    data = [
+        "//sample:sample",
+        "//:credentials",
+    ],
 )

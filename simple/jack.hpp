@@ -66,7 +66,7 @@ protected:
 namespace simple
 {
 
-void INIT (std::string server_addr,
+void INIT (std::string server_addr, const char* certfile,
 	bool genmode = false, size_t nretries = 3);
 
 void SHUTDOWN (void);

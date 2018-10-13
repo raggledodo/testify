@@ -19,8 +19,8 @@ filegroup(
 
 cc_library(
     name = "cpp_client",
-    hdrs = glob(["*.hpp"]),
-    srcs = glob(["src/*.cpp"]),
+    hdrs = ["client.hpp"],
+    srcs = ["client.cpp"],
     copts = ["-std=c++14"],
-    deps = ["//proto:cc_proto"],
+    deps = ["@com_github_raggledodo_dora//proto:cc_proto"],
 )

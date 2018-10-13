@@ -3,7 +3,9 @@
 from retrop.generate import GenIO
 import retrop.client as client
 
-client.init("0.0.0.0:8581")
+cert = open("certs/server.crt", 'rb').read()
+
+client.init("localhost:10000", cert)
 
 sample1 = GenIO("sample1")
 sample1.get_arr('"-3tg9$sLdE=d6de', float, 23, (-12, 192.2))

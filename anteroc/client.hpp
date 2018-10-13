@@ -8,11 +8,11 @@
 namespace antero
 {
 
-void INIT (size_t grab_ncases = 50, ClientConfig configs = ClientConfig());
+void INIT (ClientConfig configs = ClientConfig());
 
 void SHUTDOWN (void);
 
-optional<std::vector<testify::GeneratedCase>> get_cases (std::string tname);
+bool get_cases (std::vector<testify::GeneratedCase>& out, std::string tname);
 
 }
 

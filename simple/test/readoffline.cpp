@@ -41,7 +41,7 @@ EXPECT_TRUE(std::equal(arr1.begin(), arr1.end(), arr2.begin()))\
 	<< to_str(arr2.begin(), arr2.end()) << " are not equal"
 
 // server thread info
-static const std::string server_addr = "0.0.0.0:50075";
+static const std::string server_addr = "localhost:50075";
 
 class JACK : public TestModel {};
 
@@ -51,7 +51,7 @@ int main (int argc, char** argv)
 	size_t seed = std::time(nullptr);
 	get_engine().seed(seed);
 
-	simple::INIT(server_addr, false);
+	simple::INIT(server_addr, "certs/server.crt", false);
 
 	::testing::InitGoogleTest(&argc, argv);
 	int ret = RUN_ALL_TESTS();

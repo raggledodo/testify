@@ -36,13 +36,33 @@ std::string to_str (Iterator begin, Iterator end)
 }
 
 
+template <size_t N>
+void EXPECT_GRAPHEQ (const Graph<N>& gr, const testify::Graph& pgr)
+{
+	ASSERT_EQ(N, pgr.nverts());
+	std::string encoding = pgr.matrix();
+	size_t nbytes = std::ceil(((double) N * N) / 8);
+	EXPECT_EQ(nbytes, encoding.size());
+
+	for (uint y = 0; y < N; ++y)
+	{
+		for (uint x = 0; x < N; ++x)
+		{
+			uint ibit = x + y * N;
+			bool set = 1 & (encoding[ibit / 8] >> (ibit % 8));
+			EXPECT_EQ(gr.get(y, x), set) << "bit " << ibit;
+		}
+	}
+}
+
+
 #define EXPECT_ARREQ(arr1, arr2)\
 EXPECT_TRUE(std::equal(arr1.begin(), arr1.end(), arr2.begin()))\
 	<< "arrays " << to_str(arr1.begin(), arr1.end()) << ","\
 	<< to_str(arr2.begin(), arr2.end()) << " are not equal"
 
 // server thread info
-static const std::string server_addr = "0.0.0.0:50075";
+static const std::string server_addr = "localhost:50075";
 static std::unique_ptr<grpc::Server> server;
 std::condition_variable server_started;
 
@@ -55,30 +75,22 @@ std::condition_variable latest_update;
 struct MockService final : public testify::Dora::Service
 {
 	grpc::Status ListTestcases (grpc::ServerContext*,
-		const google::protobuf::Empty*,
-		grpc::ServerWriter<testify::TransferName>*) override
-	{
-		return grpc::Status::OK;
-	}
-
-	grpc::Status GetTestcase (grpc::ServerContext*,
-		const testify::TransferName*,
-		grpc::ServerWriter<testify::GeneratedCase>*) override
+		const testify::ListRequest*, testify::ListResponse*) override
 	{
 		return grpc::Status::OK;
 	}
 
 	grpc::Status AddTestcase (grpc::ServerContext*,
-		const testify::TransferCase* tcase, google::protobuf::Empty*) override
+		const testify::AddRequest* request, ::google::protobuf::Empty*) override
 	{
-		latest_name = tcase->name();
-		latest_case = tcase->results();
+		latest_name = request->name();
+		latest_case = request->payload();
 		latest_update.notify_one();
 		return grpc::Status::OK;
 	}
 
 	grpc::Status RemoveTestcase (grpc::ServerContext*,
-		const testify::TransferName*, google::protobuf::Empty*) override
+		const testify::RemoveRequest*, ::google::protobuf::Empty*) override
 	{
 		return grpc::Status::OK;
 	}
@@ -108,8 +120,19 @@ protected:
 void RunServer (void)
 {
 	MockService service;
+	std::string servercert = read_keycert("certs/server.crt");
+	std::string serverkey = read_keycert("certs/server.key");
+
+	grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp;
+	pkcp.private_key = serverkey;
+	pkcp.cert_chain = servercert;
+
+	grpc::SslServerCredentialsOptions ssl_opts;
+	ssl_opts.pem_key_cert_pairs.push_back(pkcp);
+	auto creds = grpc::SslServerCredentials(ssl_opts);
+
 	grpc::ServerBuilder builder;
-	builder.AddListeningPort(server_addr, grpc::InsecureServerCredentials());
+	builder.AddListeningPort(server_addr, creds);
 	builder.RegisterService(&service);
 
 	server = builder.BuildAndStart();
@@ -135,6 +158,7 @@ int main (int argc, char** argv)
 	server_started.wait_for(lck,std::chrono::seconds(1));
 	ClientConfig cfg;
 	cfg.host = server_addr;
+	cfg.cert = read_keycert("certs/server.crt");
 	retro::INIT(cfg);
 
 	::testing::InitGoogleTest(&argc, argv);
@@ -175,49 +199,43 @@ TEST_F(CLIENT, CallVecs)
 
 	auto doubit = inputs.find("double_vec");
 	EXPECT_TRUE(doubit != inputs.end()) << "double_vec not found in generated case";
-	ASSERT_EQ(testify::DTYPE::DOUBLES, doubit->second.dtype());
-	testify::Doubles ds;
-	doubit->second.data().UnpackTo(&ds);
+	ASSERT_TRUE(doubit->second.has_ddoubles());
+	auto ds = doubit->second.ddoubles();
 	auto d = ds.data();
 	EXPECT_ARREQ(vec0, d);
 
 	auto floatit = inputs.find("float_vec");
 	EXPECT_TRUE(floatit != inputs.end()) << "float_vec not found in generated case";
-	ASSERT_EQ(testify::DTYPE::FLOATS, floatit->second.dtype());
-	testify::Floats fs;
-	floatit->second.data().UnpackTo(&fs);
+	ASSERT_TRUE(floatit->second.has_dfloats());
+	auto fs = floatit->second.dfloats();
 	auto f = fs.data();
 	EXPECT_ARREQ(vec1, f);
 
 	auto int32it = inputs.find("int32_vec");
 	EXPECT_TRUE(int32it != inputs.end()) << "int32_vec not found in generated case";
-	ASSERT_EQ(testify::DTYPE::INT32S, int32it->second.dtype());
-	testify::Int32s i32s;
-	int32it->second.data().UnpackTo(&i32s);
+	ASSERT_TRUE(int32it->second.has_dint32s());
+	auto i32s = int32it->second.dint32s();
 	auto i32 = i32s.data();
 	EXPECT_ARREQ(vec2, i32);
 
 	auto uint32it = inputs.find("uint32_vec");
 	EXPECT_TRUE(uint32it != inputs.end()) << "uint32_vec not found in generated case";
-	ASSERT_EQ(testify::DTYPE::UINT32S, uint32it->second.dtype());
-	testify::Uint32s u32s;
-	uint32it->second.data().UnpackTo(&u32s);
+	ASSERT_TRUE(uint32it->second.has_duint32s());
+	auto u32s = uint32it->second.duint32s();
 	auto u32 = u32s.data();
 	EXPECT_ARREQ(vec3, u32);
 
 	auto int64it = inputs.find("int64_vec");
 	EXPECT_TRUE(int64it != inputs.end()) << "int64_vec not found in generated case";
-	ASSERT_EQ(testify::DTYPE::INT64S, int64it->second.dtype());
-	testify::Int64s i64s;
-	int64it->second.data().UnpackTo(&i64s);
+	ASSERT_TRUE(int64it->second.has_dint64s());
+	auto i64s = int64it->second.dint64s();
 	auto i64 = i64s.data();
 	EXPECT_ARREQ(vec4, i64);
 
 	auto uint64it = inputs.find("uint64_vec");
 	EXPECT_TRUE(uint64it != inputs.end()) << "uint64_vec not found in generated case";
-	ASSERT_EQ(testify::DTYPE::UINT64S, uint64it->second.dtype());
-	testify::Uint64s u64s;
-	uint64it->second.data().UnpackTo(&u64s);
+	ASSERT_TRUE(uint64it->second.has_duint64s());
+	auto u64s = uint64it->second.duint64s();
 	auto u64 = u64s.data();
 	EXPECT_ARREQ(vec5, u64);
 
@@ -225,9 +243,8 @@ TEST_F(CLIENT, CallVecs)
 	ASSERT_EQ(1, outputs.size());
 	auto outit = outputs.find("stdout");
 	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
-	ASSERT_EQ(testify::DTYPE::BYTES, outit->second.dtype());
-	testify::Bytes outbytes;
-	outit->second.data().UnpackTo(&outbytes);
+	ASSERT_TRUE(outit->second.has_dbytes());
+	auto outbytes = outit->second.dbytes();
 	std::string outstr = outbytes.data();
 	const char* optr = outstr.c_str();
 	std::vector<uint8_t> outvec(optr, optr + outstr.size());
@@ -256,9 +273,8 @@ TEST_F(CLIENT, CallStr)
 
 	auto ssit = inputs.find("simplestring");
 	EXPECT_TRUE(ssit != inputs.end()) << "simplestring not found in generated case";
-	ASSERT_EQ(testify::DTYPE::BYTES, ssit->second.dtype());
-	testify::Bytes bs;
-	ssit->second.data().UnpackTo(&bs);
+	ASSERT_TRUE(ssit->second.has_dbytes());
+	auto bs = ssit->second.dbytes();
 	std::string b = bs.data();
 	EXPECT_STREQ(instr.c_str(), b.c_str());
 
@@ -266,9 +282,8 @@ TEST_F(CLIENT, CallStr)
 	ASSERT_EQ(1, outputs.size());
 	auto outit = outputs.find("stdout");
 	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
-	ASSERT_EQ(testify::DTYPE::BYTES, outit->second.dtype());
-	testify::Bytes outbytes;
-	outit->second.data().UnpackTo(&outbytes);
+	ASSERT_TRUE(outit->second.has_dbytes());
+	testify::Bytes outbytes = outit->second.dbytes();
 	std::string outstr = outbytes.data();
 	const char* optr = outstr.c_str();
 	std::vector<uint8_t> outvec(optr, optr + outstr.size());
@@ -299,17 +314,15 @@ TEST_F(CLIENT, CallChoice)
 
 	auto chooseit = inputs.find("choosevec");
 	EXPECT_TRUE(chooseit != inputs.end()) << "choosevec not found in generated case";
-	ASSERT_EQ(testify::DTYPE::UINT64S, chooseit->second.dtype());
-	testify::Uint64s u64s;
-	chooseit->second.data().UnpackTo(&u64s);
+	ASSERT_TRUE(chooseit->second.has_duint64s());
+	auto u64s = chooseit->second.duint64s();
 	auto u64 = u64s.data();
 	EXPECT_ARREQ(carr, u64);
 
 	auto selectit = inputs.find("carr");
 	EXPECT_TRUE(selectit != inputs.end()) << "carr not found in generated case";
-	ASSERT_EQ(testify::DTYPE::UINT64S, selectit->second.dtype());
-	testify::Uint64s ss;
-	selectit->second.data().UnpackTo(&ss);
+	ASSERT_TRUE(selectit->second.has_duint64s());
+	auto ss = selectit->second.duint64s();
 	auto s = ss.data();
 	ASSERT_EQ(1, s.size());
 	EXPECT_EQ(dist, s[0]);
@@ -318,33 +331,12 @@ TEST_F(CLIENT, CallChoice)
 	ASSERT_EQ(1, outputs.size());
 	auto outit = outputs.find("stdout");
 	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
-	ASSERT_EQ(testify::DTYPE::BYTES, outit->second.dtype());
-	testify::Bytes outbytes;
-	outit->second.data().UnpackTo(&outbytes);
+	ASSERT_TRUE(outit->second.has_dbytes());
+	auto outbytes = outit->second.dbytes();
 	std::string outstr = outbytes.data();
 	const char* optr = outstr.c_str();
 	std::vector<uint8_t> outvec(optr, optr + outstr.size());
 	EXPECT_ARREQ(out, outvec);
-}
-
-
-template <size_t N>
-void EXPECT_GRAPHEQ (const Graph<N>& gr, const testify::Graph& pgr)
-{
-	ASSERT_EQ(N, pgr.nverts());
-	std::string encoding = pgr.matrix();
-	size_t nbytes = std::ceil(((double) N * N) / 8);
-	EXPECT_EQ(nbytes, encoding.size());
-
-	for (uint y = 0; y < N; ++y)
-	{
-		for (uint x = 0; x < N; ++x)
-		{
-			uint ibit = x + y * N;
-			bool set = 1 & (encoding[ibit / 8] >> (ibit % 8));
-			EXPECT_EQ(gr.get(y, x), set) << "bit " << ibit;
-		}
-	}
 }
 
 
@@ -376,16 +368,14 @@ TEST_F(CLIENT, CallTree)
 	auto outit = outputs.find("stdout");
 	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
 
-	ASSERT_EQ(testify::DTYPE::NTREE, treeit->second.dtype());
-	ASSERT_EQ(testify::DTYPE::NTREE, outit->second.dtype());
+	ASSERT_TRUE(treeit->second.has_dtree());
+	ASSERT_TRUE(outit->second.has_dtree());
 
-	testify::Tree ntree;
-	treeit->second.data().UnpackTo(&ntree);
+	auto ntree = treeit->second.dtree();
 	EXPECT_EQ(root, ntree.root());
 	EXPECT_GRAPHEQ<13>(tree, ntree.graph());
 
-	testify::Tree otree;
-	outit->second.data().UnpackTo(&otree);
+	auto otree = outit->second.dtree();
 	EXPECT_EQ(root, otree.root());
 	EXPECT_GRAPHEQ<13>(tree, otree.graph());
 }
@@ -419,15 +409,13 @@ TEST_F(CLIENT, CallGraph)
 	auto outit = outputs.find("stdout");
 	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
 
-	ASSERT_EQ(testify::DTYPE::GRAPH, regit->second.dtype());
-	ASSERT_EQ(testify::DTYPE::GRAPH, outit->second.dtype());
+	ASSERT_TRUE(regit->second.has_dgraph());
+	ASSERT_TRUE(outit->second.has_dgraph());
 
-	testify::Graph rgraph;
-	regit->second.data().UnpackTo(&rgraph);
+	auto rgraph = regit->second.dgraph();
 	EXPECT_GRAPHEQ<17>(graph, rgraph);
 
-	testify::Graph ograph;
-	outit->second.data().UnpackTo(&ograph);
+	auto ograph = outit->second.dgraph();
 	EXPECT_GRAPHEQ<17>(graph, ograph);
 }
 
@@ -460,14 +448,12 @@ TEST_F(CLIENT, CallCGraph)
 	auto outit = outputs.find("stdout");
 	EXPECT_TRUE(outit != outputs.end()) << "stdout not found in generated case";
 
-	ASSERT_EQ(testify::DTYPE::GRAPH, cgit->second.dtype());
-	ASSERT_EQ(testify::DTYPE::GRAPH, outit->second.dtype());
+	ASSERT_TRUE(cgit->second.has_dgraph());
+	ASSERT_TRUE(outit->second.has_dgraph());
 
-	testify::Graph cgraph;
-	cgit->second.data().UnpackTo(&cgraph);
+	auto cgraph = cgit->second.dgraph();
 	EXPECT_GRAPHEQ<23>(graph, cgraph);
 
-	testify::Graph ograph;
-	outit->second.data().UnpackTo(&ograph);
+	auto ograph = outit->second.dgraph();
 	EXPECT_GRAPHEQ<23>(graph, ograph);
 }

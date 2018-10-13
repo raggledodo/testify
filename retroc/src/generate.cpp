@@ -7,8 +7,7 @@ std::string GenIO::get_string (std::string usage, size_t len,
 {
 	auto out = ::get_string(len, content);
 	testify::CaseData input;
-	input.set_dtype(serialize(input.mutable_data(),
-		out.begin(), out.end()));
+	serialize(input, out.begin(), out.end());
 	gcase_.mutable_inputs()->insert({usage, input});
 	return out;
 }
@@ -17,8 +16,7 @@ std::vector<uint64_t> GenIO::choose (std::string usage, uint64_t n, uint64_t k)
 {
 	auto out = ::choose(n, k);
 	testify::CaseData input;
-	input.set_dtype(serialize(input.mutable_data(),
-		out.begin(), out.end()));
+	serialize(input, out.begin(), out.end());
 	gcase_.mutable_inputs()->insert({usage, input});
 	return out;
 }

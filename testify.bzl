@@ -43,12 +43,11 @@ cc_library(
 get_gtest = repository_rule(implementation = _impl)
 
 def dependencies():
-    # protobuf dependency
-    if "org_pubref_rules_protobuf" not in native.existing_rules():
+    if "com_github_raggledodo_dora" not in native.existing_rules():
         git_repository(
-            name = "org_pubref_rules_protobuf",
-            remote = "https://github.com/mingkaic/rules_protobuf",
-            commit = "f5615fa9d544d0a69cd73d8716364d8bd310babe",
+            name = "com_github_raggledodo_dora",
+            remote = "https://github.com/raggledodo/dora",
+            commit = "18587cc65c1098e4b32bf79156af6f7f8b99f3af",
         )
 
     # gtest dependency

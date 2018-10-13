@@ -3,57 +3,57 @@
 #ifdef TYPE_HPP
 
 template <>
-testify::DTYPE get_type<char> (void)
+DTYPE get_type<char> (void)
 {
-	return testify::BYTES;
+	return DTYPE::kDbytes;
 }
 
 template <>
-testify::DTYPE get_type<int8_t> (void)
+DTYPE get_type<int8_t> (void)
 {
-	return testify::BYTES;
+	return DTYPE::kDbytes;
 }
 
 template <>
-testify::DTYPE get_type<uint8_t> (void)
+DTYPE get_type<uint8_t> (void)
 {
-	return testify::BYTES;
+	return DTYPE::kDbytes;
 }
 
 template <>
-testify::DTYPE get_type<double> (void)
+DTYPE get_type<double> (void)
 {
-	return testify::DOUBLES;
+	return DTYPE::kDdoubles;
 }
 
 template <>
-testify::DTYPE get_type<float> (void)
+DTYPE get_type<float> (void)
 {
-	return testify::FLOATS;
+	return DTYPE::kDfloats;
 }
 
 template <>
-testify::DTYPE get_type<int32_t> (void)
+DTYPE get_type<int32_t> (void)
 {
-	return testify::INT32S;
+	return DTYPE::kDint32S;
 }
 
 template <>
-testify::DTYPE get_type<uint32_t> (void)
+DTYPE get_type<uint32_t> (void)
 {
-	return testify::UINT32S;
+	return DTYPE::kDuint32S;
 }
 
 template <>
-testify::DTYPE get_type<int64_t> (void)
+DTYPE get_type<int64_t> (void)
 {
-	return testify::INT64S;
+	return DTYPE::kDint64S;
 }
 
 template <>
-testify::DTYPE get_type<uint64_t> (void)
+DTYPE get_type<uint64_t> (void)
 {
-	return testify::UINT64S;
+	return DTYPE::kDuint64S;
 }
 
 #endif

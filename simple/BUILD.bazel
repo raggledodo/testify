@@ -40,6 +40,7 @@ cc_test(
     ],
     linkstatic = 1,
     copts = ["-std=c++14"],
+    data = ["//:credentials"],
 )
 
 cc_test(
@@ -52,6 +53,7 @@ cc_test(
     ],
     linkstatic = 1,
     copts = ["-std=c++14"],
+    data = ["//:credentials"],
 )
 
 cc_test(
@@ -64,6 +66,7 @@ cc_test(
     ],
     linkstatic = 1,
     copts = ["-std=c++14"],
+    data = ["//:credentials"],
 )
 
 cc_test(
@@ -76,4 +79,5 @@ cc_test(
     ],
     linkstatic = 1,
     copts = ["-std=c++14"],
+    data = ["//:credentials"],
 )
