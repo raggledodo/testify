@@ -47,7 +47,7 @@ def dependencies():
         git_repository(
             name = "com_github_raggledodo_dora",
             remote = "https://github.com/raggledodo/dora",
-            commit = "18587cc65c1098e4b32bf79156af6f7f8b99f3af",
+            commit = "9765cc910e2bc967d65d7a88db260d57da83f1fd",
         )
 
     # gtest dependency

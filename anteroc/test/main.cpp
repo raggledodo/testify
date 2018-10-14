@@ -152,7 +152,6 @@ int main (int argc, char** argv)
 	server_started.wait_for(lck,std::chrono::seconds(1));
 
 	dora::ClientConfig cfg;
-	size_t grab_ncases;
 	cfg.host = server_addr;
 	cfg.cert = dora::read_keycert("certs/server.crt");
 	antero::INIT(cfg);

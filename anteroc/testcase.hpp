@@ -8,9 +8,8 @@
 namespace antero
 {
 
-class Testament : public ::testing::Test
+struct Testament : public ::testing::Test
 {
-protected:
 	testify::GeneratedCase get (std::string testname);
 };
 
